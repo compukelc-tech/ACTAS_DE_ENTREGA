@@ -1,0 +1,1230 @@
+/* ============================================================================
+   SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - HOJA DE ESTILOS
+   Institución Educativa San Francisco de Sales | Desarrollado por compukelc
+   Versión: 1.0.0
+   ============================================================================ */
+
+/* === SECCIÓN 1: VARIABLES GLOBALES Y RESET BASE === */
+:root {
+  --color-primary: #1b365d;
+  --color-primary-dark: #102442;
+  --color-primary-light: #ebf4ff;
+  --color-secondary: #2c5282;
+  --color-success: #1e7e34;
+  --color-success-hover: #176429;
+  --color-danger: #c53030;
+  --color-danger-hover: #9b2c2c;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #f59e0b;
+  --color-bg-app: #eef2f6;
+  --color-surface: #ffffff;
+  --color-border: #cbd5e0;
+  --color-border-dark: #1a202c;
+  --color-text: #1a202c;
+  --color-text-muted: #4a5568;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.12);
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-doc: Arial, Helvetica, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-bg-app);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.center {
+  text-align: center;
+}
+
+/* === SECCIÓN 2: BARRA SUPERIOR INSTITUCIONAL Y PESTAÑAS === */
+.topbar {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-badge {
+  background-color: #ffffff;
+  color: var(--color-primary);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.topbar-brand h1 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.topbar-brand p {
+  font-size: 11px;
+  color: #cbd5e0;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.version-pill {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.main-tabs {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.tab-btn {
+  flex: 1;
+  max-width: 260px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #f8fafc;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab-btn:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tab-btn.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+/* === SECCIÓN 3: BOTONES Y COMPONENTES REUTILIZABLES === */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.99);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border: 1px solid var(--color-primary);
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+  border: 1px solid var(--color-secondary);
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: #ffffff;
+  border: 1px solid var(--color-success);
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.btn-success:hover {
+  background-color: var(--color-success-hover);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border: 1px solid var(--color-danger);
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.btn-outline {
+  background-color: #ffffff;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-outline:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-outline-light {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.btn-tiny {
+  background-color: #f1f5f9;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.btn-tiny:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-tiny-danger {
+  background-color: #fff5f5;
+  color: var(--color-danger);
+  border: 1px solid #feb2b2;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.btn-tiny-danger:hover {
+  background-color: #fed7d7;
+}
+
+.btn-small-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-lg {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+/* === SECCIÓN 4: CONTENEDOR PRINCIPAL, BANNER EDICIÓN Y SELECTOR === */
+.container {
+  max-width: 920px;
+  margin: 14px auto;
+  padding: 0 12px 24px;
+}
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 14px;
+}
+
+.edit-banner {
+  background-color: var(--color-warning-bg);
+  border: 1.5px solid var(--color-warning-border);
+  color: #78350f;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.selector-header label {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 14px;
+}
+
+.cod-tag {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.dependencia-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.dep-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 10px 11px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #f8fafc;
+  color: var(--color-text);
+}
+
+.dep-option:hover {
+  border-color: var(--color-secondary);
+  background-color: #ffffff;
+}
+
+.dep-option.active {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.dep-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.dep-sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.25;
+}
+
+/* === SECCIÓN 5: HOJA OFICIAL GA-R26 (DIAGRAMACIÓN EXACTA EN PANTALLA Y PDF) === */
+.sheet-paper {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: var(--font-doc);
+  border: 1px solid #94a3b8;
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.formato-oficial {
+  width: 100%;
+}
+
+/* Encabezado Institucional Oficial */
+.tbl-institucional {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  border: 1.5px solid #000000;
+}
+
+.tbl-institucional td {
+  border: 1px solid #000000;
+  padding: 4px 8px;
+  vertical-align: middle;
+}
+
+.cell-cod {
+  width: 18%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.cell-titulo-inst {
+  width: 60%;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.cell-titulo-inst strong {
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.lema {
+  font-style: italic;
+  font-size: 11px;
+  color: #1a202c;
+}
+
+.sub-acta {
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.cell-meta {
+  width: 22%;
+  font-size: 11px;
+}
+
+.cell-sub-bar {
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  background-color: #e2e8f0;
+  letter-spacing: 0.4px;
+}
+
+.inline-input {
+  border: none;
+  border-bottom: 1px solid #4a5568;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #000000;
+  background: transparent;
+  padding: 1px 3px;
+}
+
+.w-fecha {
+  width: 72px;
+}
+
+.inline-year {
+  width: 54px;
+  border: none;
+  border-bottom: 1px solid #000000;
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  background: transparent;
+}
+
+/* Tabla de Datos Generales (Titular, Salón, Grado, Nº Estudiantes) */
+.tbl-datos-generales {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  border: 1px solid #000000;
+}
+
+.tbl-datos-generales td {
+  border: 1px solid #000000;
+  padding: 5px 8px;
+  font-size: 11.5px;
+}
+
+.field-line {
+  width: 100%;
+  margin-top: 2px;
+  border: none;
+  border-bottom: 1px solid #718096;
+  background-color: #f8fafc;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 12px;
+  color: #000000;
+  border-radius: 2px;
+}
+
+.field-line:focus {
+  outline: none;
+  border-bottom: 1.5px solid var(--color-primary);
+  background-color: #ebf8ff;
+}
+
+/* Tablas de Inventario (Equipos, Pupitres, Sillas, Piso/Techo, Pedagógicos) */
+.tbl-grid {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  border: 1px solid #000000;
+  table-layout: fixed;
+}
+
+.tbl-grid th,
+.tbl-grid td {
+  border: 1px solid #000000;
+  padding: 4px 6px;
+  font-size: 11px;
+  word-wrap: break-word;
+}
+
+.tbl-grid thead th {
+  background-color: #edf2f7;
+  font-weight: 700;
+  text-align: center;
+  color: #000000;
+}
+
+.section-banner {
+  background-color: #cbd5e0 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.5px;
+  padding: 4px !important;
+}
+
+.th-mini {
+  font-size: 9px !important;
+  line-height: 1.15;
+  padding: 3px 2px !important;
+}
+
+.inline-num {
+  width: 56px;
+  border: 1px solid #a0aec0;
+  border-radius: 2px;
+  padding: 2px 4px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.cell-num,
+.cell-txt {
+  width: 100%;
+  border: 1px solid #cbd5e0;
+  border-radius: 2px;
+  padding: 3px 2px;
+  text-align: center;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.cell-num:focus,
+.cell-txt:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: #ebf8ff;
+}
+
+.tbl-grid input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #000000;
+  cursor: pointer;
+}
+
+/* Cláusula Legal y Cajas de Observaciones / Necesidades */
+.clausula-box {
+  border: 1px solid #000000;
+  background-color: #f8fafc;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 10.5px;
+  line-height: 1.3;
+  text-align: justify;
+}
+
+.obs-box {
+  border: 1px solid #000000;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+}
+
+.obs-box label {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+.obs-box textarea {
+  width: 100%;
+  border: 1px solid #cbd5e0;
+  border-radius: 2px;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: #000000;
+  resize: vertical;
+}
+
+.obs-box textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: #ebf8ff;
+}
+
+/* === SECCIÓN 6: FIRMA DIGITAL DEL DOCENTE Y PIE INSTITUCIONAL === */
+.firma-section {
+  border: 1px solid #000000;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.firma-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+
+.firma-pad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+#canvas-firma {
+  width: 100%;
+  max-width: 380px;
+  height: 110px;
+  border: 1px dashed #4a5568;
+  background-color: #ffffff;
+  border-radius: 2px;
+  touch-action: none;
+  cursor: crosshair;
+  display: block;
+}
+
+#img-firma-guardada {
+  max-width: 360px;
+  max-height: 110px;
+  border-bottom: 1px solid #000000;
+  display: block;
+}
+
+.cc-wrapper {
+  font-size: 11.5px;
+  padding-bottom: 4px;
+}
+
+.pie-institucional {
+  border-top: 1px solid #000000;
+  padding-top: 5px;
+  text-align: center;
+  font-size: 9.5px;
+  color: #1a202c;
+  line-height: 1.35;
+}
+
+/* === SECCIÓN 7: ANEXO COMPACTO TIPO FORMULARIO + EVIDENCIA FOTOGRÁFICA QR === */
+.anexo-qr-section {
+  border-top: 2px solid #000000;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.anexo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  background-color: #e2e8f0;
+  border: 1px solid #000000;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.anexo-header h3 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.anexo-header p {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.badge-contador {
+  background-color: #ffffff;
+  border: 1px solid #000000;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+.qr-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8fafc;
+  border: 1px solid var(--color-border);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+}
+
+.manual-qr-group {
+  display: flex;
+  flex: 1;
+  min-width: 240px;
+  gap: 6px;
+}
+
+.manual-qr-group input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+}
+
+.qr-reader-box {
+  background-color: #0f172a;
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#qr-reader {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.empty-qr-state {
+  border: 1px dashed #a0aec0;
+  background-color: #f8fafc;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 14px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+}
+
+/* Tarjeta Compacta Tipo Formulario por Cada Bien QR Escaneado (0..N) */
+.lista-bienes-qr {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-bien-card {
+  border: 1px solid #000000;
+  background-color: #ffffff;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.qr-bien-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #edf2f7;
+  border-bottom: 1px solid #000000;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.qr-bien-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-bien-body {
+  display: grid;
+  grid-template-columns: 70% 30%;
+  align-items: stretch;
+}
+
+.qr-bien-info {
+  border-right: 1px solid #000000;
+}
+
+.tbl-qr-ficha {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.tbl-qr-ficha td {
+  border-bottom: 1px solid #cbd5e0;
+  border-right: 1px solid #cbd5e0;
+  padding: 3px 6px;
+  font-size: 10px;
+  line-height: 1.25;
+  vertical-align: middle;
+}
+
+.tbl-qr-ficha tr:last-child td {
+  border-bottom: none;
+}
+
+.tbl-qr-ficha td:last-child {
+  border-right: none;
+}
+
+.qr-lbl {
+  font-weight: 700;
+  color: #1a202c;
+  background-color: #f8fafc;
+  width: 24%;
+}
+
+.qr-val {
+  color: #000000;
+  word-break: break-word;
+}
+
+.qr-obs-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dotted #718096;
+  font-family: inherit;
+  font-size: 10px;
+  color: #000000;
+  background: transparent;
+  padding: 1px 2px;
+}
+
+.qr-bien-foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  background-color: #fafafa;
+  text-align: center;
+}
+
+.qr-bien-foto img {
+  max-width: 100%;
+  max-height: 112px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #cbd5e0;
+  background-color: #ffffff;
+}
+
+.qr-sin-foto {
+  font-size: 9.5px;
+  color: #718096;
+  padding: 12px 4px;
+}
+
+.btn-foto-bien {
+  margin-top: 4px;
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+/* === SECCIÓN 8: BARRA DE ACCIONES, HISTORIAL, MODALES Y LOADER === */
+.actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.historial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.historial-header h2 {
+  font-size: 16px;
+  color: var(--color-primary);
+}
+
+.filtros-historial {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filtros-historial select,
+.filtros-historial input {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+}
+
+.filtros-historial input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.tabla-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tbl-historial {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.tbl-historial th,
+.tbl-historial td {
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.tbl-historial th {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.tbl-historial tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.badge-estado {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: #e2e8f0;
+  color: #1a202c;
+}
+
+.badge-estado.firmada {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+/* Modal API */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 300;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.modal-header {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 15px;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.modal-body label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.modal-body input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.help-text {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.status-box {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-box.ok {
+  background-color: #c6f6d5;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.status-box.error {
+  background-color: #fed7d7;
+  color: #742a2a;
+  border: 1px solid #feb2b2;
+}
+
+.modal-footer {
+  padding: 10px 16px;
+  background-color: #f8fafc;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Loader Global */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+}
+
+.loader-box {
+  background-color: #ffffff;
+  padding: 20px 28px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #e2e8f0;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dev-footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  padding: 10px 12px 20px;
+}
+
+/* === SECCIÓN 9: ADAPTACIÓN RESPONSIVA MÓVIL (PANTALLAS PEQUEÑAS) === */
+@media (max-width: 768px) {
+  .dependencia-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sheet-paper {
+    padding: 12px 10px;
+  }
+
+  .firma-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-bar button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .dependencia-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-bien-body {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-bien-info {
+    border-right: none;
+    border-bottom: 1px solid #000000;
+  }
+}
+
+/* === SECCIÓN 10: MODO EXPORTACIÓN PDF (html2pdf.js) E IMPRESIÓN OFICIAL === */
+.sheet-paper.pdf-export-mode {
+  width: 794px !important;
+  max-width: 794px !important;
+  min-width: 794px !important;
+  margin: 0 !important;
+  padding: 14px 18px !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.sheet-paper.pdf-export-mode .no-print {
+  display: none !important;
+}
+
+.sheet-paper.pdf-export-mode .field-line,
+.sheet-paper.pdf-export-mode .cell-num,
+.sheet-paper.pdf-export-mode .cell-txt,
+.sheet-paper.pdf-export-mode .obs-box textarea,
+.sheet-paper.pdf-export-mode .qr-obs-input {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+.sheet-paper.pdf-export-mode .field-line {
+  border-bottom: 1px solid #000000 !important;
+  padding: 1px 2px !important;
+}
+
+.sheet-paper.pdf-export-mode #canvas-firma {
+  border: none !important;
+  border-bottom: 1px solid #000000 !important;
+}
+
+.sheet-paper.pdf-export-mode .qr-bien-body {
+  grid-template-columns: 70% 30% !important;
+}
+
+.sheet-paper.pdf-export-mode .qr-bien-info {
+  border-right: 1px solid #000000 !important;
+  border-bottom: none !important;
+}
+
+/* Ocultar bloque de anexo QR en PDF si tiene 0 bienes vinculados */
+.sheet-paper.pdf-export-mode .anexo-qr-section.sin-bienes-qr {
+  display: none !important;
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .sheet-paper {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
