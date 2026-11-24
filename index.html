@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1b365d" />
+  <title>Actas de Entrega e Inventario GA-R26 | I.E. San Francisco de Sales</title>
+
+  <!-- === SECCIÓN 0: PWA MANIFEST Y ESTILOS CON CONTROL DE VERSIÓN === -->
+  <link rel="manifest" href="manifest.json?v=1.0.0" />
+  <link rel="stylesheet" href="css/styles.css?v=1.0.0" />
+
+  <!-- Librerías externas para lectura QR en navegador y exportación PDF en cliente -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+</head>
+<body>
+
+  <!-- === SECCIÓN 1: BARRA SUPERIOR INSTITUCIONAL Y NAVEGACIÓN === -->
+  <header class="topbar no-print">
+    <div class="topbar-brand">
+      <div class="brand-badge">GA-R26</div>
+      <div>
+        <h1>I.E. San Francisco de Sales</h1>
+        <p>"amablemente exigentes" &bull; Control de Entrega e Inventario</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span id="badge-version" class="version-pill">v1.0.0</span>
+      <button type="button" id="btn-config-api" class="btn-outline-light" title="Configurar URL /exec">
+        &#9881; API
+      </button>
+    </div>
+  </header>
+
+  <nav class="main-tabs no-print">
+    <button type="button" class="tab-btn active" data-vista="vista-formulario">
+      &#128221; Diligenciar Acta
+    </button>
+    <button type="button" class="tab-btn" data-vista="vista-historial">
+      &#128269; Consultar / Editar Actas
+    </button>
+  </nav>
+
+  <!-- === SECCIÓN 2: MODAL DE CONFIGURACIÓN DE URL /EXEC DEL BACKEND === -->
+  <div id="modal-api" class="modal-overlay hidden no-print">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Conexión Backend Google Apps Script</h3>
+        <button type="button" id="btn-cerrar-modal-api" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="input-api-url">URL de Implementación Web (<code>/exec</code>):</label>
+        <input
+          type="url"
+          id="input-api-url"
+          placeholder="https://script.google.com/macros/s/.../exec"
+          autocomplete="off"
+        />
+        <p class="help-text">
+          Esta URL conecta la aplicación con tu hoja <strong>BD_ACTAS_GA_R26</strong>, el lector de QR existente y las carpetas de Google Drive.
+        </p>
+        <div id="estado-conexion-api" class="status-box hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-probar-api" class="btn-secondary">Probar Conexión</button>
+        <button type="button" id="btn-guardar-api" class="btn-primary">Guardar URL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- === SECCIÓN 3: VISTA PRINCIPAL DE DILIGENCIAMIENTO Y EDICIÓN === -->
+  <main id="vista-formulario" class="container">
+
+    <!-- Banner de Modo Edición (se activa al cargar un acta desde Excel para modificarla) -->
+    <div id="banner-edicion" class="edit-banner hidden no-print">
+      <div>
+        <strong>MODO EDICIÓN ACTIVO:</strong> Editando registro <span id="lbl-id-acta-edicion"></span>
+      </div>
+      <button type="button" id="btn-cancelar-edicion" class="btn-small-danger">
+        Cancelar edición / Nueva acta
+      </button>
+    </div>
+
+    <!-- Selector de Dependencia (4 Formatos Oficiales GA-R26) -->
+    <section class="card selector-card no-print">
+      <div class="selector-header">
+        <label for="select-dependencia">1. Seleccione la Dependencia / Formato Oficial:</label>
+        <span class="cod-tag">CÓD. GA-R26 &bull; VERSIÓN 1.0</span>
+      </div>
+      <div class="dependencia-grid" id="selector-dependencia-grid">
+        <button type="button" class="dep-option active" data-dep="SALON">
+          <span class="dep-title">Salón Regular</span>
+          <span class="dep-sub">Entrega de Salón (Pupitres, sillas, infraestructura)</span>
+        </button>
+        <button type="button" class="dep-option" data-dep="AUDITORIO">
+          <span class="dep-title">Auditorio</span>
+          <span class="dep-sub">3 Aires, Video Beam, Tablero 120x240, Necesidades</span>
+        </button>
+        <button type="button" class="dep-option" data-dep="PRIMERA_INFANCIA">
+          <span class="dep-title">Primera Infancia</span>
+          <span class="dep-sub">Aire, Control, Video Beam, Mesas y Sillas Plásticas</span>
+        </button>
+        <button type="button" class="dep-option" data-dep="AULA_HIBRIDA">
+          <span class="dep-title">Aula Híbrida</span>
+          <span class="dep-sub">Cámara Poly, Router, Video Beam Poly, TV Samsung + Mobiliario</span>
+        </button>
+      </div>
+      <input type="hidden" id="input-id-acta" value="" />
+      <input type="hidden" id="input-tipo-dependencia" value="SALON" />
+    </section>
+
+    <!-- ====================================================================== -->
+    <!-- CONTENEDOR DEL FORMATO OFICIAL ACTIVO (SE RENDERIZA EN PANTALLA Y PDF) -->
+    <!-- ====================================================================== -->
+    <div id="documento-acta-wrapper" class="sheet-paper">
+
+      <!-- ==================================================================== -->
+      <!-- FORMATO 1: ENTREGA DE SALÓN REGULAR (CÓD. GA-R26)                    -->
+      <!-- ==================================================================== -->
+      <form id="form-SALON" class="formato-oficial activo" data-formato="SALON">
+        <!-- Encabezado Institucional -->
+        <table class="tbl-institucional">
+          <tr>
+            <td class="cell-cod" rowspan="3">CÓD. GA-R26</td>
+            <td class="cell-titulo-inst" rowspan="2">
+              <strong>INSTITUCIÓN EDUCATIVA SAN FRANCISCO DE SALES</strong><br />
+              <span class="lema">"amablemente exigentes"</span><br />
+              <span class="sub-acta">PAZ Y SALVO<br />INVENTARIO DE SALONES 2026</span>
+            </td>
+            <td class="cell-meta"><strong>VERSIÓN:</strong> 1.0</td>
+          </tr>
+          <tr>
+            <td class="cell-meta">
+              <strong>FECHA:</strong>
+              <input type="text" class="inline-input w-fecha" data-field="FECHA_FORMATO" value="17/01/17" />
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-sub-bar">ENTREGA DE SALÓN</td>
+            <td class="cell-meta"><strong>PÁG.</strong> <span class="pag-dinamica">1 DE 2</span></td>
+          </tr>
+        </table>
+
+        <!-- Datos del Titular y Salón -->
+        <table class="tbl-datos-generales">
+          <tr>
+            <td style="width: 58%;">
+              <strong>NOMBRE DEL TITULAR:</strong>
+              <input type="text" class="field-line" data-field="NOMBRE_TITULAR_DOCENTE" placeholder="Nombre completo del docente titular" required />
+            </td>
+            <td style="width: 42%;">
+              <strong>SALÓN:</strong>
+              <input type="text" class="field-line" data-field="SALON_DEPENDENCIA" placeholder="Ej. Salón 101" required />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>GRADO:</strong>
+              <input type="text" class="field-line" data-field="GRADO" placeholder="Ej. 6° A" />
+            </td>
+            <td>
+              <strong>Nº ESTUDIANTES:</strong>
+              <input type="number" min="0" class="field-line" data-field="NRO_ESTUDIANTES" placeholder="0" />
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tabla 1: Equipos y Mobiliario Docente (BUENO / REGULAR / MALO) -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">DESCRIPCIÓN</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                AIRE ACONDICIONADO (Nro):
+                <input type="number" min="0" class="inline-num" data-field="AIRE_ACOND_CANT" value="1" />
+              </td>
+              <td class="center"><input type="radio" name="salon_aire_est" data-radio-group="AIRE_ACOND_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_aire_est" data-radio-group="AIRE_ACOND_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_aire_est" data-radio-group="AIRE_ACOND_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>TABLERO</td>
+              <td class="center"><input type="radio" name="salon_tablero_est" data-radio-group="TABLERO_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_tablero_est" data-radio-group="TABLERO_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_tablero_est" data-radio-group="TABLERO_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>ESCRITORIO DOCENTE</td>
+              <td class="center"><input type="radio" name="salon_esc_doc_est" data-radio-group="ESCRITORIO_DOC_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_esc_doc_est" data-radio-group="ESCRITORIO_DOC_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_esc_doc_est" data-radio-group="ESCRITORIO_DOC_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>SILLA DOCENTE</td>
+              <td class="center"><input type="radio" name="salon_silla_doc_est" data-radio-group="SILLA_DOC_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_silla_doc_est" data-radio-group="SILLA_DOC_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_silla_doc_est" data-radio-group="SILLA_DOC_ESTADO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 2: PUPITRES -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th colspan="6" class="section-banner">PUPITRES</th>
+            </tr>
+            <tr>
+              <th rowspan="2" style="width: 30%;">NOMBRE</th>
+              <th rowspan="2" style="width: 12%;">BUENOS</th>
+              <th colspan="3" style="width: 44%;">PARA REPARAR</th>
+              <th rowspan="2" style="width: 14%;">DAÑADOS<br />INSERVIBLES</th>
+            </tr>
+            <tr>
+              <th class="th-mini">TORNILLOS Y/O ARANDELAS</th>
+              <th class="th-mini">TABLA DE MADERA(M) O PASTA (P)</th>
+              <th class="th-mini">PUNTOS DE SOLDADURA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ESCRITORIO UNIVERSITARIO</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="SALON_PUP_UNIV_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_UNIV_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_PUP_UNIV_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_UNIV_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="SALON_PUP_UNIV_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>MESA PARA 1 ESTUDIANTE</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="SALON_PUP_M1_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_M1_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_PUP_M1_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_M1_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="SALON_PUP_M1_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>MESA PARA 2 O MÁS ESTUDIANTES</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="SALON_PUP_M2_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_M2_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_PUP_M2_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_M2_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="SALON_PUP_M2_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>ESCRITORIO DOCENTE</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="SALON_PUP_DOC_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_DOC_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_PUP_DOC_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="SALON_PUP_DOC_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="SALON_PUP_DOC_DAN" value="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 3: SILLAS -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th colspan="6" class="section-banner">SILLAS</th>
+            </tr>
+            <tr>
+              <th rowspan="2" style="width: 30%;">NOMBRE</th>
+              <th rowspan="2" style="width: 12%;">BUENOS</th>
+              <th colspan="3" style="width: 44%;">PARA REPARAR</th>
+              <th rowspan="2" style="width: 14%;">DAÑADOS<br />INSERVIBLES</th>
+            </tr>
+            <tr>
+              <th class="th-mini">TORNILLOS Y/O ARANDELAS</th>
+              <th class="th-mini">TABLA DE MADERA(M) O PASTA (P)</th>
+              <th class="th-mini">PUNTOS DE SOLDADURA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SILLA ESTUDIANTE</td>
+              <td><input type="number" min="0" class="cell-num sil-buena" data-field="SALON_SIL_EST_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="SALON_SIL_EST_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_SIL_EST_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="SALON_SIL_EST_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-dan" data-field="SALON_SIL_EST_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>OTRAS SILLAS</td>
+              <td><input type="number" min="0" class="cell-num sil-buena" data-field="SALON_SIL_OTR_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="SALON_SIL_OTR_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="SALON_SIL_OTR_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="SALON_SIL_OTR_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-dan" data-field="SALON_SIL_OTR_DAN" value="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 4: Estado del Piso y Techo -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">INFRAESTRUCTURA</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ESTADO DEL PISO</td>
+              <td class="center"><input type="radio" name="salon_piso_est" data-radio-group="ESTADO_PISO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_piso_est" data-radio-group="ESTADO_PISO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_piso_est" data-radio-group="ESTADO_PISO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>ESTADO DEL TECHO</td>
+              <td class="center"><input type="radio" name="salon_techo_est" data-radio-group="ESTADO_TECHO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_techo_est" data-radio-group="ESTADO_TECHO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_techo_est" data-radio-group="ESTADO_TECHO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 5: Elementos con los que dispone el aula de clases -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th colspan="4" class="section-banner">ELEMENTOS CON LOS QUE DISPONE EL AULA DE CLASES</th>
+            </tr>
+            <tr>
+              <th style="width: 55%; text-align: left;">ELEMENTOS</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>PEDAGÓGICOS:</strong>
+                <input type="text" class="field-line" data-field="SALON_PEDAGOGICOS_DETALLE" placeholder="Detallar material pedagógico del aula..." />
+              </td>
+              <td class="center"><input type="radio" name="salon_ped_est" data-radio-group="SALON_PEDAGOGICOS_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="salon_ped_est" data-radio-group="SALON_PEDAGOGICOS_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="salon_ped_est" data-radio-group="SALON_PEDAGOGICOS_ESTADO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Cláusula Legal y Observaciones -->
+        <div class="clausula-box">
+          <p>
+            *Se deja constancia de la entrega del salón asignado, junto con el mobiliario y elementos que lo conforman, los cuales quedan a cargo del docente responsable durante el año lectivo. Al finalizar el período académico, el salón deberá ser entregado con los mismos elementos, considerando el desgaste normal por el uso adecuado.
+          </p>
+        </div>
+
+        <div class="obs-box">
+          <label><strong>OBSERVACIÓN:</strong></label>
+          <textarea rows="2" data-field="OBSERVACIONES" placeholder="Escriba aquí las observaciones del salón..."></textarea>
+        </div>
+      </form>
+
+      <!-- ==================================================================== -->
+      <!-- FORMATO 2: ENTREGA DE AUDITORIO (CÓD. GA-R26)                        -->
+      <!-- ==================================================================== -->
+      <form id="form-AUDITORIO" class="formato-oficial hidden" data-formato="AUDITORIO">
+        <table class="tbl-institucional">
+          <tr>
+            <td class="cell-cod" rowspan="3">CÓD. GA-R26<br /><small>INVENTARIO</small></td>
+            <td class="cell-titulo-inst" rowspan="2">
+              <strong>INSTITUCIÓN EDUCATIVA SAN FRANCISCO DE SALES</strong><br />
+              <span class="lema">"amablemente exigentes"</span><br />
+              <span class="sub-acta">PAZ Y SALVO<br />INVENTARIO DE SALONES</span>
+            </td>
+            <td class="cell-meta"><strong>VERSIÓN:</strong> 1.0</td>
+          </tr>
+          <tr>
+            <td class="cell-meta">
+              <strong>FECHA:</strong>
+              <input type="text" class="inline-input w-fecha" data-field="FECHA_FORMATO" value="17/01/17" />
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-sub-bar">ENTREGA DE AUDITORIO</td>
+            <td class="cell-meta"><strong>PÁG.</strong> <span class="pag-dinamica">1 DE 2</span></td>
+          </tr>
+        </table>
+
+        <table class="tbl-datos-generales">
+          <tr>
+            <td style="width: 65%;">
+              <strong>NOMBRE DEL TITULAR:</strong>
+              <input type="text" class="field-line" data-field="NOMBRE_TITULAR_DOCENTE" placeholder="Nombre completo del titular" />
+            </td>
+            <td style="width: 35%;">
+              <strong>SALÓN:</strong>
+              <input type="text" class="field-line" data-field="SALON_DEPENDENCIA" value="AUDITORIO" />
+            </td>
+          </tr>
+        </table>
+
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">EQUIPO / ELEMENTO</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 AIRE ACONDICIONADO (Unidad 1)</td>
+              <td class="center"><input type="radio" name="aud_aire1" data-radio-group="AUD_AIRE_1" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="aud_aire1" data-radio-group="AUD_AIRE_1" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="aud_aire1" data-radio-group="AUD_AIRE_1" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>1 AIRE ACONDICIONADO (Unidad 2)</td>
+              <td class="center"><input type="radio" name="aud_aire2" data-radio-group="AUD_AIRE_2" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="aud_aire2" data-radio-group="AUD_AIRE_2" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="aud_aire2" data-radio-group="AUD_AIRE_2" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>1 AIRE ACONDICIONADO (Unidad 3)</td>
+              <td class="center"><input type="radio" name="aud_aire3" data-radio-group="AUD_AIRE_3" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="aud_aire3" data-radio-group="AUD_AIRE_3" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="aud_aire3" data-radio-group="AUD_AIRE_3" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>1 VIDEO BEAM</td>
+              <td class="center"><input type="radio" name="aud_vb" data-radio-group="AUD_VIDEO_BEAM" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="aud_vb" data-radio-group="AUD_VIDEO_BEAM" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="aud_vb" data-radio-group="AUD_VIDEO_BEAM" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>1 TABLERO BORRABLE ACRÍLICO DE 120 X 240CM</td>
+              <td class="center"><input type="radio" name="aud_tab" data-radio-group="TABLERO_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="aud_tab" data-radio-group="TABLERO_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="aud_tab" data-radio-group="TABLERO_ESTADO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="obs-box">
+          <label><strong>ELEMENTOS CON LOS QUE DISPONE EL AULA DE CLASES:</strong></label>
+          <textarea rows="3" data-field="ELEMENTOS_PEDAGOGICOS" placeholder="Relacione sillas, sonido, micrófonos, tarima u otros elementos del auditorio..."></textarea>
+        </div>
+
+        <div class="obs-box">
+          <label><strong>Detallar las necesidades del Aula de Clases:</strong></label>
+          <textarea rows="3" data-field="NECESIDADES_AULA" placeholder="Describa las necesidades técnicas o locativas del auditorio..."></textarea>
+        </div>
+
+        <div class="obs-box">
+          <label><strong>OBSERVACIÓN:</strong></label>
+          <textarea rows="2" data-field="OBSERVACIONES" placeholder="Observaciones adicionales..."></textarea>
+        </div>
+      </form>
+
+      <!-- ==================================================================== -->
+      <!-- FORMATO 3: INVENTARIO SALÓN PRIMERA INFANCIA (COD. GA-R26)           -->
+      <!-- ==================================================================== -->
+      <form id="form-PRIMERA_INFANCIA" class="formato-oficial hidden" data-formato="PRIMERA_INFANCIA">
+        <table class="tbl-institucional">
+          <tr>
+            <td class="cell-cod" rowspan="3">COD. GA-R26</td>
+            <td class="cell-titulo-inst" rowspan="2">
+              <strong>INSTITUCIÓN EDUCATIVA SAN FRANCISCO DE SALES</strong><br />
+              <span class="lema">"amablemente exigentes"</span><br />
+              <span class="sub-acta">PAZ Y SALVO<br />INVENTARIO DE SALONES 2026</span>
+            </td>
+            <td class="cell-meta"><strong>VERSIÓN:</strong> 1.0</td>
+          </tr>
+          <tr>
+            <td class="cell-meta">
+              <strong>FECHA:</strong>
+              <input type="text" class="inline-input w-fecha" data-field="FECHA_FORMATO" value="17/01/17" />
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-sub-bar">INVENTARIO SALÓN PRIMERA INFANCIA</td>
+            <td class="cell-meta"><strong>PÁG.</strong> <span class="pag-dinamica">1 DE 1</span></td>
+          </tr>
+        </table>
+
+        <table class="tbl-datos-generales">
+          <tr>
+            <td style="width: 35%;">
+              <strong>INVENTARIO AÑO:</strong>
+              <input type="number" class="field-line" data-field="INVENTARIO_ANIO" value="2026" />
+            </td>
+            <td style="width: 65%;">
+              <strong>NOMBRE DEL DOCENTE:</strong>
+              <input type="text" class="field-line" data-field="NOMBRE_TITULAR_DOCENTE" placeholder="Nombre completo del docente" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>GRADO:</strong>
+              <input type="text" class="field-line" data-field="GRADO" placeholder="Ej. Transición 01" />
+            </td>
+            <td>
+              <strong>Nº ESTUDIANTES:</strong>
+              <input type="number" min="0" class="field-line" data-field="NRO_ESTUDIANTES" placeholder="0" />
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <strong>AULA DE PRIMERA INFANCIA:</strong>
+              <input type="text" class="field-line" data-field="SALON_DEPENDENCIA" placeholder="Nombre o número del aula de Primera Infancia" />
+            </td>
+          </tr>
+        </table>
+
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">DESCRIPCIÓN</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                AIRE ACONDICIONADO (Nro):
+                <input type="number" min="0" class="inline-num" data-field="AIRE_ACOND_CANT" value="1" />
+              </td>
+              <td class="center"><input type="radio" name="pi_aire" data-radio-group="AIRE_ACOND_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_aire" data-radio-group="AIRE_ACOND_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_aire" data-radio-group="AIRE_ACOND_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>CONTROL DE AIRE ACONDICIONADO</td>
+              <td class="center"><input type="radio" name="pi_ctrl_aire" data-radio-group="CONTROL_AIRE_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_ctrl_aire" data-radio-group="CONTROL_AIRE_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_ctrl_aire" data-radio-group="CONTROL_AIRE_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>1 VIDEO BEAM</td>
+              <td class="center"><input type="radio" name="pi_vb" data-radio-group="PI_VIDEO_BEAM" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_vb" data-radio-group="PI_VIDEO_BEAM" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_vb" data-radio-group="PI_VIDEO_BEAM" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>
+                TABLERO BORRABLE ACRÍLICO DE 120 X 240CM (Nro):
+                <input type="number" min="0" class="inline-num" data-field="TABLERO_CANT" value="1" />
+              </td>
+              <td class="center"><input type="radio" name="pi_tab" data-radio-group="TABLERO_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_tab" data-radio-group="TABLERO_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_tab" data-radio-group="TABLERO_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>
+                MESA PLÁSTICA (Nro):
+                <input type="number" min="0" class="inline-num" data-field="PI_MESA_PLASTICA_CANT" value="0" />
+              </td>
+              <td class="center"><input type="radio" name="pi_mesa" data-radio-group="PI_MESA_PLASTICA_EST" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_mesa" data-radio-group="PI_MESA_PLASTICA_EST" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_mesa" data-radio-group="PI_MESA_PLASTICA_EST" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>
+                SILLA PLÁSTICA (Nro):
+                <input type="number" min="0" class="inline-num" data-field="PI_SILLA_PLASTICA_CANT" value="0" />
+              </td>
+              <td class="center"><input type="radio" name="pi_silla" data-radio-group="PI_SILLA_PLASTICA_EST" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="pi_silla" data-radio-group="PI_SILLA_PLASTICA_EST" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="pi_silla" data-radio-group="PI_SILLA_PLASTICA_EST" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="obs-box">
+          <label><strong>ELEMENTOS CON LOS QUE DISPONE EL AULA DE CLASES:</strong></label>
+          <textarea rows="3" data-field="ELEMENTOS_PEDAGOGICOS" placeholder="Material didáctico, juegos, colchonetas, estanterías..."></textarea>
+        </div>
+
+        <div class="obs-box">
+          <label><strong>Detallar las necesidades del Aula de Clases:</strong></label>
+          <textarea rows="3" data-field="NECESIDADES_AULA" placeholder="Necesidades específicas del aula de Primera Infancia..."></textarea>
+        </div>
+
+        <div class="obs-box">
+          <label><strong>OBSERVACIÓN:</strong></label>
+          <textarea rows="2" data-field="OBSERVACIONES" placeholder="Observaciones adicionales..."></textarea>
+        </div>
+      </form>
+
+      <!-- ==================================================================== -->
+      <!-- FORMATO 4: INVENTARIO AULA HÍBRIDA (CÓD. GA-R26)                     -->
+      <!-- ==================================================================== -->
+      <form id="form-AULA_HIBRIDA" class="formato-oficial hidden" data-formato="AULA_HIBRIDA">
+        <table class="tbl-institucional">
+          <tr>
+            <td class="cell-cod" rowspan="3">
+              CÓD. GA-R26<br />
+              <small>INVENTARIO <input type="number" class="inline-year" data-field="INVENTARIO_ANIO" value="2026" /></small>
+            </td>
+            <td class="cell-titulo-inst" rowspan="2">
+              <strong>INSTITUCIÓN EDUCATIVA SAN FRANCISCO DE SALES</strong><br />
+              <span class="lema">"amablemente exigentes"</span><br />
+              <span class="sub-acta">PAZ Y SALVO<br />INVENTARIO DE SALONES</span>
+            </td>
+            <td class="cell-meta"><strong>VERSIÓN:</strong> 1.0</td>
+          </tr>
+          <tr>
+            <td class="cell-meta">
+              <strong>FECHA:</strong>
+              <input type="text" class="inline-input w-fecha" data-field="FECHA_FORMATO" value="17/01/17" />
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-sub-bar">INVENTARIO AULA HÍBRIDA</td>
+            <td class="cell-meta"><strong>PÁG.</strong> <span class="pag-dinamica">1 DE 2</span></td>
+          </tr>
+        </table>
+
+        <table class="tbl-datos-generales">
+          <tr>
+            <td style="width: 58%;">
+              <strong>NOMBRE DEL TITULAR:</strong>
+              <input type="text" class="field-line" data-field="NOMBRE_TITULAR_DOCENTE" placeholder="Nombre del docente titular" />
+            </td>
+            <td style="width: 42%;">
+              <strong>SALÓN:</strong>
+              <input type="text" class="field-line" data-field="SALON_DEPENDENCIA" placeholder="Ej. Aula Híbrida 201" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>GRADO:</strong>
+              <input type="text" class="field-line" data-field="GRADO" placeholder="Ej. 10° B" />
+            </td>
+            <td>
+              <strong>Nro ESTUDIANTES:</strong>
+              <input type="number" min="0" class="field-line" data-field="NRO_ESTUDIANTES" placeholder="0" />
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tabla 1: Equipamiento Tecnológico y Mobiliario Docente Aula Híbrida -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">AULA HÍBRIDA:</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AIRE ACONDICIONADO (Unidad 1)</td>
+              <td class="center"><input type="radio" name="hib_aire1" data-radio-group="HIB_AIRE_1" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_aire1" data-radio-group="HIB_AIRE_1" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_aire1" data-radio-group="HIB_AIRE_1" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>AIRE ACONDICIONADO (Unidad 2)</td>
+              <td class="center"><input type="radio" name="hib_aire2" data-radio-group="HIB_AIRE_2" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_aire2" data-radio-group="HIB_AIRE_2" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_aire2" data-radio-group="HIB_AIRE_2" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>ESCRITORIO DOCENTE</td>
+              <td class="center"><input type="radio" name="hib_esc" data-radio-group="ESCRITORIO_DOC_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_esc" data-radio-group="ESCRITORIO_DOC_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_esc" data-radio-group="ESCRITORIO_DOC_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>SILLA DOCENTE</td>
+              <td class="center"><input type="radio" name="hib_silla" data-radio-group="SILLA_DOC_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_silla" data-radio-group="SILLA_DOC_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_silla" data-radio-group="SILLA_DOC_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>TABLERO</td>
+              <td class="center"><input type="radio" name="hib_tab" data-radio-group="TABLERO_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_tab" data-radio-group="TABLERO_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_tab" data-radio-group="TABLERO_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>CÁMARA MARCA POLY</td>
+              <td class="center"><input type="radio" name="hib_poly_cam" data-radio-group="CAMARA_POLY_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_poly_cam" data-radio-group="CAMARA_POLY_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_poly_cam" data-radio-group="CAMARA_POLY_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>ROUTER</td>
+              <td class="center"><input type="radio" name="hib_router" data-radio-group="ROUTER_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_router" data-radio-group="ROUTER_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_router" data-radio-group="ROUTER_ESTADO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>VIDEO BEAM MARCA POLY</td>
+              <td class="center"><input type="radio" name="hib_poly_vb" data-radio-group="HIB_VIDEO_BEAM_POLY" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_poly_vb" data-radio-group="HIB_VIDEO_BEAM_POLY" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_poly_vb" data-radio-group="HIB_VIDEO_BEAM_POLY" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>TELEVISOR SAMSUNG</td>
+              <td class="center"><input type="radio" name="hib_tv" data-radio-group="TV_SAMSUNG_ESTADO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_tv" data-radio-group="TV_SAMSUNG_ESTADO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_tv" data-radio-group="TV_SAMSUNG_ESTADO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 2: PUPITRES Aula Híbrida -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th colspan="6" class="section-banner">PUPITRES</th>
+            </tr>
+            <tr>
+              <th rowspan="2" style="width: 30%;">NOMBRE</th>
+              <th rowspan="2" style="width: 12%;">BUENOS</th>
+              <th colspan="3" style="width: 44%;">PARA REPARAR</th>
+              <th rowspan="2" style="width: 14%;">DAÑADOS<br />INSERVIBLES</th>
+            </tr>
+            <tr>
+              <th class="th-mini">TORNILLOS Y/O ARANDELAS</th>
+              <th class="th-mini">TABLA DE MADERA(M) O PASTA (P)</th>
+              <th class="th-mini">PUNTOS DE SOLDADURA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ESCRITORIO UNIVERSITARIO</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="HIB_PUP_UNIV_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_UNIV_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_PUP_UNIV_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_UNIV_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="HIB_PUP_UNIV_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>MESA PARA 1 ESTUDIANTE</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="HIB_PUP_M1_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_M1_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_PUP_M1_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_M1_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="HIB_PUP_M1_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>MESA PARA 2 O MÁS ESTUDIANTES</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="HIB_PUP_M2_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_M2_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_PUP_M2_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_M2_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="HIB_PUP_M2_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>ESCRITORIO DOCENTE</td>
+              <td><input type="number" min="0" class="cell-num pup-bueno" data-field="HIB_PUP_DOC_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_DOC_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_PUP_DOC_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num pup-rep" data-field="HIB_PUP_DOC_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num pup-dan" data-field="HIB_PUP_DOC_DAN" value="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 3: SILLAS Aula Híbrida -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th colspan="6" class="section-banner">SILLAS</th>
+            </tr>
+            <tr>
+              <th rowspan="2" style="width: 30%;">NOMBRE</th>
+              <th rowspan="2" style="width: 12%;">BUENOS</th>
+              <th colspan="3" style="width: 44%;">PARA REPARAR</th>
+              <th rowspan="2" style="width: 14%;">DAÑADOS<br />INSERVIBLES</th>
+            </tr>
+            <tr>
+              <th class="th-mini">TORNILLOS Y/O ARANDELAS</th>
+              <th class="th-mini">TABLA DE MADERA(M) O PASTA (P)</th>
+              <th class="th-mini">PUNTOS DE SOLDADURA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SILLA ESTUDIANTE</td>
+              <td><input type="number" min="0" class="cell-num sil-buena" data-field="HIB_SIL_EST_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="HIB_SIL_EST_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_SIL_EST_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="HIB_SIL_EST_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-dan" data-field="HIB_SIL_EST_DAN" value="0" /></td>
+            </tr>
+            <tr>
+              <td>OTRAS SILLAS</td>
+              <td><input type="number" min="0" class="cell-num sil-buena" data-field="HIB_SIL_OTR_BUENOS" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="HIB_SIL_OTR_TORN" value="0" /></td>
+              <td><input type="text" class="cell-txt" data-field="HIB_SIL_OTR_TABLA" placeholder="0 / M / P" /></td>
+              <td><input type="number" min="0" class="cell-num sil-rep" data-field="HIB_SIL_OTR_SOLD" value="0" /></td>
+              <td><input type="number" min="0" class="cell-num sil-dan" data-field="HIB_SIL_OTR_DAN" value="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabla 4: Piso y Techo Aula Híbrida -->
+        <table class="tbl-grid">
+          <thead>
+            <tr>
+              <th style="width: 55%; text-align: left;">INFRAESTRUCTURA</th>
+              <th style="width: 15%;">BUENO</th>
+              <th style="width: 15%;">REGULAR</th>
+              <th style="width: 15%;">MALO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ESTADO DEL PISO</td>
+              <td class="center"><input type="radio" name="hib_piso" data-radio-group="ESTADO_PISO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_piso" data-radio-group="ESTADO_PISO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_piso" data-radio-group="ESTADO_PISO" value="MALO" /></td>
+            </tr>
+            <tr>
+              <td>ESTADO DEL TECHO</td>
+              <td class="center"><input type="radio" name="hib_techo" data-radio-group="ESTADO_TECHO" value="BUENO" /></td>
+              <td class="center"><input type="radio" name="hib_techo" data-radio-group="ESTADO_TECHO" value="REGULAR" /></td>
+              <td class="center"><input type="radio" name="hib_techo" data-radio-group="ESTADO_TECHO" value="MALO" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="obs-box">
+          <label><strong>OBSERVACIÓN:</strong></label>
+          <textarea rows="2" data-field="OBSERVACIONES" placeholder="Escriba aquí las observaciones del aula híbrida..."></textarea>
+        </div>
+      </form>
+
+      <!-- ==================================================================== -->
+      <!-- SECCIÓN 4: FIRMA DIGITAL DEL DOCENTE Y PIE INSTITUCIONAL OFICIAL     -->
+      <!-- ==================================================================== -->
+      <section class="firma-section">
+        <div class="firma-grid">
+          <div class="firma-pad-wrapper">
+            <div class="firma-pad-header">
+              <span><strong>FIRMA DOCENTE:</strong></span>
+              <button type="button" id="btn-limpiar-firma" class="btn-tiny no-print">Limpiar trazo</button>
+            </div>
+            <canvas id="canvas-firma" width="380" height="120"></canvas>
+            <img id="img-firma-guardada" class="hidden" alt="Firma docente guardada" />
+          </div>
+
+          <div class="cc-wrapper">
+            <label for="input-cc-docente"><strong>CC:</strong></label>
+            <input type="text" id="input-cc-docente" class="field-line" placeholder="Número de cédula" />
+          </div>
+        </div>
+
+        <footer class="pie-institucional">
+          <span><strong>CÓDIGO DANE:</strong> 154001001628</span> &bull;
+          <span><strong>NIT:</strong> 890-505-161-5</span> &bull;
+          <span><strong>Dirección:</strong> Av. 4E #6-23 Barrio Popular</span> &bull;
+          <span><strong>Correo Institucional:</strong> colfranciscodesales@semcucuta.gov.co</span>
+        </footer>
+      </section>
+
+      <!-- ==================================================================== -->
+      <!-- SECCIÓN 5: ANEXO COMPACTO TIPO FORMULARIO + EVIDENCIA FOTOGRÁFICA QR -->
+      <!-- (SIN MÍNIMOS NI MÁXIMOS: 0 A N BIENES VINCULADOS AL FINAL DEL PDF)    -->
+      <!-- ==================================================================== -->
+      <section class="anexo-qr-section">
+        <div class="anexo-header">
+          <div>
+            <h3>ANEXO DE VERIFICACIÓN DE BIENES POR CÓDIGO QR</h3>
+            <p class="no-print">Escanea o ingresa cualquier cantidad de códigos QR de esta dependencia (sin mínimo ni máximo).</p>
+          </div>
+          <span class="badge-contador">Total QR: <strong id="contador-bienes-qr">0</strong></span>
+        </div>
+
+        <!-- Controles de Escaneo / Ingreso Manual (No se imprimen en el PDF) -->
+        <div class="qr-controls no-print">
+          <button type="button" id="btn-abrir-camara-qr" class="btn-primary">
+            &#128247; Escanear Código QR
+          </button>
+          <button type="button" id="btn-cerrar-camara-qr" class="btn-danger hidden">
+            &#9209; Detener Cámara
+          </button>
+
+          <div class="manual-qr-group">
+            <input
+              type="text"
+              id="input-codigo-qr-manual"
+              placeholder="O pegue código/URL (ej. 166501.01.0398)"
+            />
+            <button type="button" id="btn-buscar-qr-manual" class="btn-secondary">
+              Agregar Bien
+            </button>
+          </div>
+        </div>
+
+        <!-- Visor de Cámara QR -->
+        <div id="qr-reader-box" class="qr-reader-box hidden no-print">
+          <div id="qr-reader"></div>
+        </div>
+
+        <!-- Lista Dinámica de Fichas Tipo Formulario + Foto (0..N) -->
+        <div id="lista-bienes-qr" class="lista-bienes-qr">
+          <div id="estado-vacio-qr" class="empty-qr-state no-print">
+            No hay bienes con QR vinculados en esta acta. Si la dependencia no tiene equipos etiquetados, puede guardar y generar el PDF directamente.
+          </div>
+        </div>
+      </section>
+
+    </div><!-- Fin #documento-acta-wrapper -->
+
+    <!-- ====================================================================== -->
+    <!-- SECCIÓN 6: BARRA DE ACCIONES FINALES (GUARDAR, PDF, LIMPIAR)           -->
+    <!-- ====================================================================== -->
+    <section class="actions-bar no-print">
+      <button type="button" id="btn-guardar-acta" class="btn-success btn-lg">
+        &#128190; Guardar Acta y PDF en Drive / Excel
+      </button>
+      <button type="button" id="btn-descargar-pdf" class="btn-primary btn-lg">
+        &#128196; Generar / Descargar PDF
+      </button>
+      <button type="button" id="btn-nuevo-formulario" class="btn-outline">
+        &#128465; Limpiar Todo
+      </button>
+    </section>
+
+  </main>
+
+  <!-- === SECCIÓN 7: VISTA DE CONSULTA Y EDICIÓN DE ACTAS GUARDADAS === -->
+  <section id="vista-historial" class="container hidden no-print">
+    <div class="card">
+      <div class="historial-header">
+        <h2>Actas Guardadas en Google Sheets / Drive</h2>
+        <button type="button" id="btn-refrescar-historial" class="btn-secondary">
+          &#8635; Actualizar Lista
+        </button>
+      </div>
+
+      <div class="filtros-historial">
+        <select id="filtro-tipo-historial">
+          <option value="">Todas las dependencias</option>
+          <option value="SALON">Salón Regular</option>
+          <option value="AUDITORIO">Auditorio</option>
+          <option value="PRIMERA_INFANCIA">Primera Infancia</option>
+          <option value="AULA_HIBRIDA">Aula Híbrida</option>
+        </select>
+        <input
+          type="search"
+          id="input-busqueda-historial"
+          placeholder="Buscar por salón, docente, grado o ID_ACTA..."
+        />
+      </div>
+
+      <div class="tabla-responsive">
+        <table class="tbl-historial">
+          <thead>
+            <tr>
+              <th>ID Acta</th>
+              <th>Fecha</th>
+              <th>Dependencia</th>
+              <th>Salón / Aula</th>
+              <th>Titular</th>
+              <th>Bienes QR</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-historial">
+            <tr>
+              <td colspan="8" class="center">Cargando registros desde BD_ACTAS_GA_R26...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overlay de Carga Global -->
+  <div id="loader-global" class="loader-overlay hidden no-print">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <p id="loader-mensaje">Procesando solicitud...</p>
+    </div>
+  </div>
+
+  <!-- Firma de desarrollo -->
+  <footer class="dev-footer no-print">
+    Sistema desarrollado por <strong>compukelc</strong> &bull; Institución Educativa San Francisco de Sales
+  </footer>
+
+  <!-- === SECCIÓN 8: MÓDULOS JAVASCRIPT CON CONTROL DE VERSIÓN === -->
+  <script src="js/config.js?v=1.0.0" defer></script>
+  <script src="js/forms.js?v=1.0.0" defer></script>
+  <script src="js/scanner.js?v=1.0.0" defer></script>
+  <script src="js/pdf-builder.js?v=1.0.0" defer></script>
+  <script src="js/app.js?v=1.0.0" defer></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js?v=1.0.0').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
