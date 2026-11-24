@@ -2,7 +2,7 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - CONTROLADOR PRINCIPAL
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.0
+ * Versión: 1.0.2
  * ============================================================================
  */
 
@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let firmaModificada = false;
   let ultX = 0;
   let ultY = 0;
+  let eventoInstalacionPwa = null;
 
   // Mostrar versión activa en la barra superior
   const badgeVersion = document.getElementById('badge-version');
@@ -21,7 +22,34 @@ document.addEventListener('DOMContentLoaded', () => {
     badgeVersion.textContent = `v${window.ConfigManager.APP_CONFIG.VERSION}`;
   }
 
-  /* === SECCIÓN 2: INICIALIZACIÓN DE LIENZO TÁCTIL PARA FIRMA DOCENTE === */
+  /* === SECCIÓN 2: DETECCIÓN E INSTALACIÓN NATIVA PWA === */
+  function inicializarInstaladorPwa() {
+    const btnInstalar = document.getElementById('btn-instalar-pwa');
+    if (!btnInstalar) return;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      eventoInstalacionPwa = e;
+      btnInstalar.classList.remove('hidden');
+    });
+
+    btnInstalar.addEventListener('click', async () => {
+      if (!eventoInstalacionPwa) return;
+      eventoInstalacionPwa.prompt();
+      const resultado = await eventoInstalacionPwa.userChoice;
+      if (resultado && resultado.outcome === 'accepted') {
+        btnInstalar.classList.add('hidden');
+      }
+      eventoInstalacionPwa = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      eventoInstalacionPwa = null;
+      btnInstalar.classList.add('hidden');
+    });
+  }
+
+  /* === SECCIÓN 3: INICIALIZACIÓN DE LIENZO TÁCTIL PARA FIRMA DOCENTE === */
   function inicializarPadFirma() {
     if (!canvasFirma || !ctxFirma) return;
 
@@ -52,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ultX = pos.x;
       ultY = pos.y;
 
-      // Si había una firma previa cargada en edición, ocultarla al iniciar nuevo trazo
       const imgGuardada = document.getElementById('img-firma-guardada');
       if (imgGuardada && !imgGuardada.classList.contains('hidden')) {
         imgGuardada.classList.add('hidden');
@@ -78,12 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
       dibujandoFirma = false;
     };
 
-    // Eventos de ratón
     canvasFirma.addEventListener('mousedown', iniciarTrazo);
     canvasFirma.addEventListener('mousemove', moverTrazo);
     window.addEventListener('mouseup', finalizarTrazo);
 
-    // Eventos táctiles móviles
     canvasFirma.addEventListener('touchstart', iniciarTrazo, { passive: false });
     canvasFirma.addEventListener('touchmove', moverTrazo, { passive: false });
     canvasFirma.addEventListener('touchend', finalizarTrazo);
@@ -118,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return '';
   }
 
-  /* === SECCIÓN 3: NAVEGACIÓN ENTRE VISTAS Y MODAL DE CONFIGURACIÓN API === */
+  /* === SECCIÓN 4: NAVEGACIÓN ENTRE VISTAS Y MODAL DE CONFIGURACIÓN API === */
   function cambiarVista(idVistaObjetivo) {
     const vistaForm = document.getElementById('vista-formulario');
     const vistaHist = document.getElementById('vista-historial');
@@ -200,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* === SECCIÓN 4: GUARDAR ACTA + PDF EN GOOGLE DRIVE Y EXCEL === */
+  /* === SECCIÓN 5: GUARDAR ACTA + PDF EN GOOGLE DRIVE Y EXCEL === */
   async function guardarActaCompleta() {
     if (!window.ConfigManager.getApiUrl()) {
       alert('Configura primero la URL /exec del backend en el botón "API".');
@@ -208,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Detener cámara QR si quedó encendida
     if (window.ScannerManager) {
       await window.ScannerManager.detenerCamara();
     }
@@ -249,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `Bienes QR vinculados: ${respuesta.totalBienesQR}`
       );
 
-      // Recargar el acta recién guardada en modo edición para mantener su ID y enlaces actualizados
       await abrirActaParaEdicion(respuesta.idActa, false);
     } catch (err) {
       ocultarLoader();
@@ -279,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* === SECCIÓN 5: CONSULTA, EDICIÓN Y ELIMINACIÓN DESDE EXCEL (CRUD) === */
+  /* === SECCIÓN 6: CONSULTA, EDICIÓN Y ELIMINACIÓN DESDE EXCEL (CRUD) === */
   async function cargarListaHistorial() {
     const tbody = document.getElementById('tbody-historial');
     if (!tbody) return;
@@ -415,36 +438,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* === SECCIÓN 6: ENLACE DE EVENTOS DE INTERFAZ === */
+  /* === SECCIÓN 7: ENLACE DE EVENTOS DE INTERFAZ === */
   function enlazarEventos() {
-    // Pestañas superiores
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => cambiarVista(btn.dataset.vista));
     });
 
-    // Modal de configuración API
     document.getElementById('btn-config-api')?.addEventListener('click', abrirModalApi);
     document.getElementById('btn-cerrar-modal-api')?.addEventListener('click', cerrarModalApi);
     document.getElementById('btn-probar-api')?.addEventListener('click', probarConexionApi);
     document.getElementById('btn-guardar-api')?.addEventListener('click', guardarUrlApi);
 
-    // Selector de los 4 formatos oficiales GA-R26
     document.querySelectorAll('.dep-option').forEach((btn) => {
       btn.addEventListener('click', () => {
         window.FormsManager.cambiarDependencia(btn.dataset.dep);
       });
     });
 
-    // Botón cancelar edición / volver a acta nueva
     document.getElementById('btn-cancelar-edicion')?.addEventListener('click', () => {
       limpiarPadFirma();
       window.FormsManager.limpiarFormulario(true);
     });
 
-    // Limpiar trazo de firma
     document.getElementById('btn-limpiar-firma')?.addEventListener('click', limpiarPadFirma);
 
-    // Controles de cámara e ingreso manual QR
     document.getElementById('btn-abrir-camara-qr')?.addEventListener('click', () => {
       window.ScannerManager.iniciarCamara();
     });
@@ -465,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Botones de acción principal
     document.getElementById('btn-guardar-acta')?.addEventListener('click', guardarActaCompleta);
     document.getElementById('btn-descargar-pdf')?.addEventListener('click', descargarSoloPdf);
 
@@ -476,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Filtros del historial
     document.getElementById('btn-refrescar-historial')?.addEventListener('click', cargarListaHistorial);
     document.getElementById('filtro-tipo-historial')?.addEventListener('change', cargarListaHistorial);
 
@@ -487,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* === SECCIÓN 7: UTILIDADES DE INTERFAZ Y ARRANQUE === */
+  /* === SECCIÓN 8: UTILIDADES DE INTERFAZ Y ARRANQUE === */
   function mostrarLoader(msg) {
     const loader = document.getElementById('loader-global');
     const txt = document.getElementById('loader-mensaje');
@@ -511,12 +526,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return escaparTxt(str).replace(/"/g, '&quot;');
   }
 
-  // Inicialización general
+  inicializarInstaladorPwa();
   inicializarPadFirma();
   enlazarEventos();
   window.FormsManager.cambiarDependencia('SALON');
 
-  // Si aún no hay URL /exec configurada, abrir automáticamente el modal la primera vez
   if (!window.ConfigManager.getApiUrl()) {
     abrirModalApi();
   }
