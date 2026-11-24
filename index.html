@@ -4,11 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#1b365d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Actas GA-R26" />
   <title>Actas de Entrega e Inventario GA-R26 | I.E. San Francisco de Sales</title>
 
-  <!-- === SECCIÓN 0: PWA MANIFEST Y ESTILOS CON CONTROL DE VERSIÓN === -->
-  <link rel="manifest" href="manifest.json?v=1.0.0" />
-  <link rel="stylesheet" href="css/styles.css?v=1.0.0" />
+  <!-- === SECCIÓN 0: PWA MANIFEST, ICONOS PNG Y ESTILOS CON CONTROL DE VERSIÓN === -->
+  <link rel="manifest" href="manifest.json?v=1.0.2" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css?v=1.0.2" />
 
   <!-- Librerías externas para lectura QR en navegador y exportación PDF en cliente -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
@@ -27,7 +32,10 @@
     </div>
 
     <div class="topbar-actions">
-      <span id="badge-version" class="version-pill">v1.0.0</span>
+      <button type="button" id="btn-instalar-pwa" class="btn-outline-light hidden" title="Instalar aplicación en este dispositivo">
+        &#128242; Instalar App
+      </button>
+      <span id="badge-version" class="version-pill">v1.0.2</span>
       <button type="button" id="btn-config-api" class="btn-outline-light" title="Configurar URL /exec">
         &#9881; API
       </button>
@@ -996,16 +1004,16 @@
   </footer>
 
   <!-- === SECCIÓN 8: MÓDULOS JAVASCRIPT CON CONTROL DE VERSIÓN === -->
-  <script src="js/config.js?v=1.0.0" defer></script>
-  <script src="js/forms.js?v=1.0.0" defer></script>
-  <script src="js/scanner.js?v=1.0.0" defer></script>
-  <script src="js/pdf-builder.js?v=1.0.0" defer></script>
-  <script src="js/app.js?v=1.0.0" defer></script>
+  <script src="js/config.js?v=1.0.2" defer></script>
+  <script src="js/forms.js?v=1.0.2" defer></script>
+  <script src="js/scanner.js?v=1.0.2" defer></script>
+  <script src="js/pdf-builder.js?v=1.0.2" defer></script>
+  <script src="js/app.js?v=1.0.2" defer></script>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=1.0.0').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.0.2').catch(() => {});
       });
     }
   </script>
