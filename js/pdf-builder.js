@@ -2,16 +2,16 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - GENERADOR DE PDF
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.0
+ * Versión: 1.0.1
  * ============================================================================
  */
 
 window.PdfBuilder = (() => {
-  /* === SECCIÓN 1: PREPARACIÓN Y RESTAURACIÓN DEL DOM PARA EXPORTACIÓN PDF === */
+  /* === SECCIÓN 1: PREPARACIÓN Y SANEAMIENTO DEL DOM PARA EXPORTACIÓN PDF === */
   function prepararVistaParaPdf(wrapper, firmaDataUrl) {
     const restauraciones = [];
 
-    // 1. Activar ancho fijo institucional Carta/A4 y estilos limpios de impresión
+    // 1. Activar ancho fijo institucional Carta y estilos limpios de impresión
     wrapper.classList.add('pdf-export-mode');
     restauraciones.push(() => wrapper.classList.remove('pdf-export-mode'));
 
@@ -22,7 +22,7 @@ window.PdfBuilder = (() => {
       seccionAnexo.classList.add('sin-bienes-qr');
     }
 
-    // 3. Reemplazar temporalmente <textarea> por bloques <div> para evitar recortes de scroll
+    // 3. Reemplazar temporalmente <textarea> por bloques <div> para evitar cortes
     wrapper.querySelectorAll('textarea').forEach((ta) => {
       const formPadre = ta.closest('.formato-oficial');
       if (formPadre && formPadre.classList.contains('hidden')) return;
@@ -45,7 +45,7 @@ window.PdfBuilder = (() => {
       });
     });
 
-    // 4. Asegurar que el trazo de la firma digital se renderice como imagen nítida
+    // 4. Asegurar que la firma digital se renderice como imagen Base64 limpia
     const canvasFirma = document.getElementById('canvas-firma');
     const imgFirmaGuardada = document.getElementById('img-firma-guardada');
 
@@ -72,6 +72,26 @@ window.PdfBuilder = (() => {
         }
       });
     }
+
+    // 5. Evitar que imágenes externas no convertidas a Base64 contaminen el canvas
+    wrapper.querySelectorAll('img').forEach((img) => {
+      if (img.classList.contains('hidden')) return;
+      const src = img.getAttribute('src') || '';
+      if (src && !src.startsWith('data:image')) {
+        const aviso = document.createElement('div');
+        aviso.className = 'qr-sin-foto';
+        aviso.textContent = 'Evidencia vinculada en Drive';
+
+        const prevDisplay = img.style.display;
+        img.style.display = 'none';
+        img.parentNode.insertBefore(aviso, img.nextSibling);
+
+        restauraciones.push(() => {
+          aviso.remove();
+          img.style.display = prevDisplay;
+        });
+      }
+    });
 
     return () => {
       for (let i = restauraciones.length - 1; i >= 0; i--) {
@@ -101,7 +121,6 @@ window.PdfBuilder = (() => {
         html2canvas: {
           scale: 2,
           useCORS: true,
-          allowTaint: true,
           logging: false,
           scrollY: 0,
           windowWidth: 820
@@ -126,7 +145,7 @@ window.PdfBuilder = (() => {
       const worker = html2pdf().set(opciones).from(wrapper).toPdf();
       const pdf = await worker.get('pdf');
 
-      // Estampar pie de paginación real (Pág. X de Y) en todas las hojas generadas
+      // Estampar pie de paginación real (Pág. X de Y)
       const totalPaginas = pdf.internal.getNumberOfPages();
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -164,12 +183,17 @@ window.PdfBuilder = (() => {
   }
 
   /**
-   * Genera el PDF y devuelve su Data URI Base64 para subirlo a Google Drive vía Apps Script
+   * Genera el PDF y normaliza su salida Base64 a "data:application/pdf;base64,..."
    */
   async function generarPdfBase64(datosActa, firmaDataUrl = '') {
     const nombreArchivo = construirNombreArchivo(datosActa);
     const pdf = await construirDocumentoPdf(nombreArchivo, firmaDataUrl);
-    return pdf.output('datauristring');
+    const rawDataUri = pdf.output('datauristring');
+    const idxBase64 = rawDataUri.indexOf('base64,');
+    if (idxBase64 === -1) {
+      throw new Error('No se pudo codificar el PDF en Base64.');
+    }
+    return 'data:application/pdf;base64,' + rawDataUri.substring(idxBase64 + 7);
   }
 
   /**
