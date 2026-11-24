@@ -2,7 +2,7 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - ESCÁNER QR Y FOTOS
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.0
+ * Versión: 1.0.1
  * ============================================================================
  */
 
@@ -40,6 +40,7 @@ window.ScannerManager = (() => {
       const base64Comprimida = await comprimirImagenCanvas(archivo);
       bienesVinculados[indiceFotoEnCurso].fotoNuevaBase64 = base64Comprimida;
       bienesVinculados[indiceFotoEnCurso].fotoBase64 = base64Comprimida;
+      bienesVinculados[indiceFotoEnCurso].respaldarEnEvidencias = true;
       renderizarListaBienes();
     } catch (err) {
       alert('No se pudo procesar la fotografía: ' + err.message);
@@ -91,9 +92,6 @@ window.ScannerManager = (() => {
     }
   }
 
-  /**
-   * Selecciona la cámara trasera principal evitando lentes gran angular o frontales
-   */
   async function seleccionarCamaraTraseraPrincipal() {
     try {
       const camaras = await Html5Qrcode.getCameras();
@@ -202,7 +200,8 @@ window.ScannerManager = (() => {
         fechaEscaneo: bien.fechaEscaneo || obtenerFechaHoraLocal(),
         fotoUrl: bien.fotoUrl || '',
         fotoBase64: bien.fotoBase64 || '',
-        fotoNuevaBase64: ''
+        fotoNuevaBase64: '',
+        respaldarEnEvidencias: Boolean(bien.fotoBase64)
       });
 
       const inputManual = document.getElementById('input-codigo-qr-manual');
@@ -242,9 +241,6 @@ window.ScannerManager = (() => {
     inputFileFoto.click();
   }
 
-  /**
-   * Carga los bienes QR guardados cuando se abre un acta desde Excel para edición
-   */
   function cargarBienesGuardados(listaBienes) {
     bienesVinculados = Array.isArray(listaBienes)
       ? listaBienes.map((b) => ({
@@ -258,7 +254,8 @@ window.ScannerManager = (() => {
           fechaEscaneo: b.fechaEscaneo || '',
           fotoUrl: b.fotoUrl || '',
           fotoBase64: b.fotoBase64 || '',
-          fotoNuevaBase64: ''
+          fotoNuevaBase64: '',
+          respaldarEnEvidencias: false
         }))
       : [];
 
@@ -308,7 +305,7 @@ window.ScannerManager = (() => {
         const srcImagen = bien.fotoNuevaBase64 || bien.fotoBase64 || '';
         const bloqueImagen = srcImagen
           ? `<img src="${srcImagen}" alt="Evidencia ${escaparHTML(bien.codigo)}" />`
-          : `<div class="qr-sin-foto">Sin fotografía registrada en BD</div>`;
+          : `<div class="qr-sin-foto">Sin fotografía registrada</div>`;
 
         return `
           <article class="qr-bien-card" data-qr-index="${idx}">
@@ -372,7 +369,6 @@ window.ScannerManager = (() => {
       })
       .join('');
 
-    // Enlazar eventos delegados de tarjetas QR
     contenedor.querySelectorAll('button[data-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
