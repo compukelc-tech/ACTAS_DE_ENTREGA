@@ -1,11 +1,11 @@
 /**
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - SERVICE WORKER
- * Desarrollado por compukelc | Control automático de caché PWA v1.0.4
+ * Desarrollado por compukelc | Control automático de caché PWA v1.0.5
  * ============================================================================
  */
 
-const CACHE_VERSION = 'ga-r26-cache-v1.0.4';
+const CACHE_VERSION = 'ga-r26-cache-v1.0.5';
 
 const CORE_ASSETS = [
   './',
@@ -21,6 +21,7 @@ const CORE_ASSETS = [
   './js/app.js'
 ];
 
+/* === SECCIÓN 1: INSTALACIÓN Y ACTIVACIÓN INMEDIATA === */
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -42,6 +43,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/* === SECCIÓN 2: ESTRATEGIA NETWORK-FIRST CON RESPALDO DE NAVEGACIÓN === */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
@@ -58,6 +60,13 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       })
-      .catch(() => caches.match(req))
+      .catch(async () => {
+        const cached = await caches.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        if (req.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+        return Response.error();
+      })
   );
 });
