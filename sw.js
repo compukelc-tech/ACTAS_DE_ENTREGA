@@ -1,11 +1,11 @@
 /**
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - SERVICE WORKER
- * Desarrollado por compukelc | Control automático de caché PWA v1.0.3
+ * Desarrollado por compukelc | Control automático de caché PWA v1.0.4
  * ============================================================================
  */
 
-const CACHE_VERSION = 'ga-r26-cache-v1.0.3';
+const CACHE_VERSION = 'ga-r26-cache-v1.0.4';
 
 const CORE_ASSETS = [
   './',
