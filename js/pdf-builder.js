@@ -2,102 +2,203 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - GENERADOR DE PDF
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.1
+ * Versión: 1.0.3 (Renderizado en escenario fijo 0,0 sin recortes ni placeholders)
  * ============================================================================
  */
 
 window.PdfBuilder = (() => {
-  /* === SECCIÓN 1: PREPARACIÓN Y SANEAMIENTO DEL DOM PARA EXPORTACIÓN PDF === */
-  function prepararVistaParaPdf(wrapper, firmaDataUrl) {
-    const restauraciones = [];
+  /* === SECCIÓN 1: CREACIÓN DE CLON LIMPIO EN ESCENARIO FIJO (0,0) === */
+  function crearEscenarioClonadoPdf(wrapper, firmaDataUrl) {
+    // 1. Crear escenario anclado en (0,0) detrás del #loader-global (z-index: 500)
+    const stage = document.createElement('div');
+    stage.id = 'pdf-render-stage';
+    stage.style.position = 'absolute';
+    stage.style.left = '0px';
+    stage.style.top = '0px';
+    stage.style.width = '750px';
+    stage.style.backgroundColor = '#ffffff';
+    stage.style.zIndex = '400';
+    stage.style.margin = '0';
+    stage.style.padding = '0';
+    stage.style.overflow = 'visible';
 
-    // 1. Activar ancho fijo institucional Carta y estilos limpios de impresión
-    wrapper.classList.add('pdf-export-mode');
-    restauraciones.push(() => wrapper.classList.remove('pdf-export-mode'));
+    // 2. Clonar el contenedor del documento
+    const clon = wrapper.cloneNode(true);
+    clon.id = 'documento-acta-clon-pdf';
+    clon.classList.add('pdf-export-mode');
+    clon.style.width = '750px';
+    clon.style.maxWidth = '750px';
+    clon.style.minWidth = '750px';
+    clon.style.margin = '0';
+    clon.style.padding = '10px 14px';
+    clon.style.boxSizing = 'border-box';
 
-    // 2. Verificar si hay bienes QR vinculados (0..N)
+    // 3. Eliminar formularios ocultos de otras dependencias y controles .no-print
+    clon.querySelectorAll('.formato-oficial.hidden').forEach((f) => f.remove());
+    clon.querySelectorAll('.no-print').forEach((el) => el.remove());
+
+    // 4. Si hay 0 bienes QR vinculados, ocultar la sección de anexo
     const totalQR = window.ScannerManager ? window.ScannerManager.obtenerListaBienes().length : 0;
-    const seccionAnexo = wrapper.querySelector('.anexo-qr-section');
+    const seccionAnexo = clon.querySelector('.anexo-qr-section');
     if (seccionAnexo && totalQR === 0) {
-      seccionAnexo.classList.add('sin-bienes-qr');
+      seccionAnexo.remove();
     }
 
-    // 3. Reemplazar temporalmente <textarea> por bloques <div> para evitar cortes
-    wrapper.querySelectorAll('textarea').forEach((ta) => {
-      const formPadre = ta.closest('.formato-oficial');
-      if (formPadre && formPadre.classList.contains('hidden')) return;
+    // 5. Sincronizar valores vivos desde el DOM original hacia el clon antes de convertir
+    const inputsOrig = wrapper.querySelectorAll('input, textarea');
+    const inputsClon = clon.querySelectorAll('input, textarea');
+    // Nota: como ya eliminamos .formato-oficial.hidden en clon, sincronizamos por atributos/orden en el form activo
+    const formOrigActivo = wrapper.querySelector('.formato-oficial.activo');
+    const formClonActivo = clon.querySelector('.formato-oficial.activo');
 
-      const clonDiv = document.createElement('div');
-      clonDiv.style.minHeight = '34px';
-      clonDiv.style.fontSize = '11px';
-      clonDiv.style.lineHeight = '1.3';
-      clonDiv.style.whiteSpace = 'pre-wrap';
-      clonDiv.style.wordBreak = 'break-word';
-      clonDiv.style.padding = '2px 4px';
-      clonDiv.textContent = ta.value || ' ';
-
-      ta.style.display = 'none';
-      ta.parentNode.insertBefore(clonDiv, ta.nextSibling);
-
-      restauraciones.push(() => {
-        clonDiv.remove();
-        ta.style.display = '';
-      });
-    });
-
-    // 4. Asegurar que la firma digital se renderice como imagen Base64 limpia
-    const canvasFirma = document.getElementById('canvas-firma');
-    const imgFirmaGuardada = document.getElementById('img-firma-guardada');
-
-    if (firmaDataUrl && canvasFirma) {
-      const imgTemp = document.createElement('img');
-      imgTemp.src = firmaDataUrl;
-      imgTemp.style.maxWidth = '340px';
-      imgTemp.style.maxHeight = '105px';
-      imgTemp.style.display = 'block';
-      imgTemp.style.borderBottom = '1px solid #000000';
-
-      const prevCanvasDisplay = canvasFirma.style.display;
-      const prevImgHidden = imgFirmaGuardada ? imgFirmaGuardada.classList.contains('hidden') : true;
-
-      canvasFirma.style.display = 'none';
-      if (imgFirmaGuardada) imgFirmaGuardada.classList.add('hidden');
-      canvasFirma.parentNode.insertBefore(imgTemp, canvasFirma.nextSibling);
-
-      restauraciones.push(() => {
-        imgTemp.remove();
-        canvasFirma.style.display = prevCanvasDisplay;
-        if (imgFirmaGuardada && !prevImgHidden) {
-          imgFirmaGuardada.classList.remove('hidden');
+    if (formOrigActivo && formClonActivo) {
+      const camposOrig = formOrigActivo.querySelectorAll('input, textarea');
+      const camposClon = formClonActivo.querySelectorAll('input, textarea');
+      camposOrig.forEach((origEl, i) => {
+        const clonEl = camposClon[i];
+        if (!clonEl) return;
+        if (origEl.type === 'radio' || origEl.type === 'checkbox') {
+          clonEl.checked = origEl.checked;
+        } else {
+          clonEl.value = origEl.value;
         }
       });
     }
 
-    // 5. Evitar que imágenes externas no convertidas a Base64 contaminen el canvas
-    wrapper.querySelectorAll('img').forEach((img) => {
-      if (img.classList.contains('hidden')) return;
+    // Sincronizar cédula y observaciones de tarjetas QR
+    const ccOrig = wrapper.querySelector('#input-cc-docente');
+    const ccClon = clon.querySelector('#input-cc-docente');
+    if (ccOrig && ccClon) ccClon.value = ccOrig.value;
+
+    const qrObsOrig = wrapper.querySelectorAll('.qr-obs-input');
+    const qrObsClon = clon.querySelectorAll('.qr-obs-input');
+    qrObsOrig.forEach((origEl, i) => {
+      if (qrObsClon[i]) qrObsClon[i].value = origEl.value;
+    });
+
+    // 6. Convertir todos los <input> en texto plano o marcas "X" (eliminando placeholders como "0 / M / P")
+    clon.querySelectorAll('input').forEach((inp) => {
+      if (inp.type === 'hidden') {
+        inp.remove();
+        return;
+      }
+
+      if (inp.type === 'radio') {
+        const marca = document.createElement('span');
+        marca.style.display = 'inline-block';
+        marca.style.width = '14px';
+        marca.style.height = '14px';
+        marca.style.lineHeight = '13px';
+        marca.style.textAlign = 'center';
+        marca.style.fontWeight = '700';
+        marca.style.fontSize = '11px';
+        marca.style.border = '1px solid #000000';
+        marca.textContent = inp.checked ? 'X' : '';
+        inp.parentNode.replaceChild(marca, inp);
+        return;
+      }
+
+      const spanVal = document.createElement('span');
+      const valorLimpio = (inp.value || '').trim();
+      spanVal.textContent = valorLimpio;
+      spanVal.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      spanVal.style.color = '#000000';
+
+      if (inp.classList.contains('inline-input') || inp.classList.contains('inline-year')) {
+        spanVal.style.display = 'inline-block';
+        spanVal.style.minWidth = '42px';
+        spanVal.style.borderBottom = '1px solid #000000';
+        spanVal.style.fontWeight = '700';
+        spanVal.style.fontSize = '11px';
+        spanVal.style.padding = '0 3px';
+      } else if (inp.classList.contains('inline-num')) {
+        spanVal.style.display = 'inline-block';
+        spanVal.style.minWidth = '28px';
+        spanVal.style.border = '1px solid #000000';
+        spanVal.style.textAlign = 'center';
+        spanVal.style.fontWeight = '700';
+        spanVal.style.fontSize = '11px';
+        spanVal.style.padding = '1px 4px';
+        spanVal.style.marginLeft = '4px';
+      } else if (inp.classList.contains('cell-num') || inp.classList.contains('cell-txt')) {
+        spanVal.style.display = 'block';
+        spanVal.style.width = '100%';
+        spanVal.style.textAlign = 'center';
+        spanVal.style.fontWeight = '700';
+        spanVal.style.fontSize = '11px';
+        spanVal.style.minHeight = '14px';
+      } else {
+        spanVal.style.display = 'block';
+        spanVal.style.width = '100%';
+        spanVal.style.minHeight = '16px';
+        spanVal.style.borderBottom = '1px solid #000000';
+        spanVal.style.fontSize = '11.5px';
+        spanVal.style.padding = '2px 2px 1px';
+      }
+
+      inp.parentNode.replaceChild(spanVal, inp);
+    });
+
+    // 7. Convertir todos los <textarea> en bloques <div> expandibles
+    clon.querySelectorAll('textarea').forEach((ta) => {
+      const bloqueTxt = document.createElement('div');
+      bloqueTxt.style.minHeight = '32px';
+      bloqueTxt.style.fontSize = '11px';
+      bloqueTxt.style.lineHeight = '1.35';
+      bloqueTxt.style.whiteSpace = 'pre-wrap';
+      bloqueTxt.style.wordBreak = 'break-word';
+      bloqueTxt.style.padding = '2px 4px';
+      bloqueTxt.style.color = '#000000';
+      bloqueTxt.textContent = (ta.value || '').trim() || ' ';
+      ta.parentNode.replaceChild(bloqueTxt, ta);
+    });
+
+    // 8. Reemplazar el lienzo de firma por la imagen Base64 de la firma
+    const canvasClon = clon.querySelector('#canvas-firma');
+    const imgGuardadaClon = clon.querySelector('#img-firma-guardada');
+    if (canvasClon) {
+      if (firmaDataUrl) {
+        const imgFirma = document.createElement('img');
+        imgFirma.src = firmaDataUrl;
+        imgFirma.style.maxWidth = '320px';
+        imgFirma.style.maxHeight = '95px';
+        imgFirma.style.display = 'block';
+        imgFirma.style.borderBottom = '1px solid #000000';
+        canvasClon.parentNode.replaceChild(imgFirma, canvasClon);
+      } else {
+        const lineaVacia = document.createElement('div');
+        lineaVacia.style.height = '65px';
+        lineaVacia.style.borderBottom = '1px solid #000000';
+        canvasClon.parentNode.replaceChild(lineaVacia, canvasClon);
+      }
+    }
+    if (imgGuardadaClon) {
+      imgGuardadaClon.remove();
+    }
+
+    // 9. Proteger contra imágenes externas que no estén en Data URI Base64
+    clon.querySelectorAll('img').forEach((img) => {
       const src = img.getAttribute('src') || '';
       if (src && !src.startsWith('data:image')) {
         const aviso = document.createElement('div');
         aviso.className = 'qr-sin-foto';
         aviso.textContent = 'Evidencia vinculada en Drive';
-
-        const prevDisplay = img.style.display;
-        img.style.display = 'none';
-        img.parentNode.insertBefore(aviso, img.nextSibling);
-
-        restauraciones.push(() => {
-          aviso.remove();
-          img.style.display = prevDisplay;
-        });
+        img.parentNode.replaceChild(aviso, img);
       }
     });
 
-    return () => {
-      for (let i = restauraciones.length - 1; i >= 0; i--) {
-        restauraciones[i]();
-      }
-    };
+    stage.appendChild(clon);
+    document.body.appendChild(stage);
+
+    // 10. Sincronizar el número total de páginas en el encabezado con la altura real medida
+    const alturaPx = clon.scrollHeight || 900;
+    const paginasEstimadas = Math.max(1, Math.ceil(alturaPx / 935));
+    const spanPag = clon.querySelector('.pag-dinamica');
+    if (spanPag) {
+      spanPag.textContent = `1 DE ${paginasEstimadas}`;
+    }
+
+    return { stage, clon };
   }
 
   /* === SECCIÓN 2: CONSTRUCCIÓN DEL PDF Y NUMERACIÓN DE PÁGINAS === */
@@ -111,19 +212,23 @@ window.PdfBuilder = (() => {
       throw new Error('No se encontró el contenedor del acta para exportar.');
     }
 
-    const restaurarDOM = prepararVistaParaPdf(wrapper, firmaDataUrl);
+    const { stage, clon } = crearEscenarioClonadoPdf(wrapper, firmaDataUrl);
 
     try {
       const opciones = {
         margin: [8, 8, 11, 8],
         filename: nombreArchivo,
-        image: { type: 'jpeg', quality: 0.92 },
+        image: { type: 'jpeg', quality: 0.94 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           logging: false,
+          x: 0,
+          y: 0,
+          scrollX: 0,
           scrollY: 0,
-          windowWidth: 820
+          width: 750,
+          windowWidth: 794
         },
         jsPDF: {
           unit: 'mm',
@@ -142,7 +247,7 @@ window.PdfBuilder = (() => {
         }
       };
 
-      const worker = html2pdf().set(opciones).from(wrapper).toPdf();
+      const worker = html2pdf().set(opciones).from(clon).toPdf();
       const pdf = await worker.get('pdf');
 
       // Estampar pie de paginación real (Pág. X de Y)
@@ -166,7 +271,9 @@ window.PdfBuilder = (() => {
 
       return pdf;
     } finally {
-      restaurarDOM();
+      if (stage && stage.parentNode) {
+        stage.parentNode.removeChild(stage);
+      }
     }
   }
 
@@ -182,9 +289,6 @@ window.PdfBuilder = (() => {
     return `GA-R26_${limpio || 'ENTREGA'}.pdf`;
   }
 
-  /**
-   * Genera el PDF y normaliza su salida Base64 a "data:application/pdf;base64,..."
-   */
   async function generarPdfBase64(datosActa, firmaDataUrl = '') {
     const nombreArchivo = construirNombreArchivo(datosActa);
     const pdf = await construirDocumentoPdf(nombreArchivo, firmaDataUrl);
@@ -196,9 +300,6 @@ window.PdfBuilder = (() => {
     return 'data:application/pdf;base64,' + rawDataUri.substring(idxBase64 + 7);
   }
 
-  /**
-   * Genera y descarga el PDF directamente en el dispositivo del usuario
-   */
   async function descargarPdfLocal(datosActa, firmaDataUrl = '') {
     const nombreArchivo = construirNombreArchivo(datosActa);
     const pdf = await construirDocumentoPdf(nombreArchivo, firmaDataUrl);
