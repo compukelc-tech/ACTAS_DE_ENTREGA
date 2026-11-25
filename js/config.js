@@ -2,13 +2,13 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - CONFIGURACIÓN Y API
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.5
+ * Versión: 1.0.6
  * ============================================================================
  */
 
 /* === SECCIÓN 1: CONSTANTES GLOBALES E INSTITUCIONALES === */
 const APP_CONFIG = {
-  VERSION: '1.0.5',
+  VERSION: '1.0.6',
   STORAGE_KEY_API_URL: 'ga_r26_backend_exec_url',
   STORAGE_KEY_API_VER: 'ga_r26_backend_exec_ver',
 
