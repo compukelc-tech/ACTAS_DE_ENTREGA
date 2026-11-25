@@ -2,36 +2,38 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - GENERADOR DE PDF
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.3 (Renderizado en escenario fijo 0,0 sin recortes ni placeholders)
+ * Versión: 1.0.4 (Ancho unificado 730px sin recortes laterales en móvil/PC)
  * ============================================================================
  */
 
 window.PdfBuilder = (() => {
   /* === SECCIÓN 1: CREACIÓN DE CLON LIMPIO EN ESCENARIO FIJO (0,0) === */
   function crearEscenarioClonadoPdf(wrapper, firmaDataUrl) {
+    const ANCHO_PDF_PX = 730;
+
     // 1. Crear escenario anclado en (0,0) detrás del #loader-global (z-index: 500)
     const stage = document.createElement('div');
     stage.id = 'pdf-render-stage';
     stage.style.position = 'absolute';
     stage.style.left = '0px';
     stage.style.top = '0px';
-    stage.style.width = '750px';
+    stage.style.width = `${ANCHO_PDF_PX}px`;
     stage.style.backgroundColor = '#ffffff';
     stage.style.zIndex = '400';
     stage.style.margin = '0';
     stage.style.padding = '0';
     stage.style.overflow = 'visible';
 
-    // 2. Clonar el contenedor del documento
+    // 2. Clonar el contenedor del documento y forzar ancho exacto de 730px
     const clon = wrapper.cloneNode(true);
     clon.id = 'documento-acta-clon-pdf';
     clon.classList.add('pdf-export-mode');
-    clon.style.width = '750px';
-    clon.style.maxWidth = '750px';
-    clon.style.minWidth = '750px';
-    clon.style.margin = '0';
-    clon.style.padding = '10px 14px';
-    clon.style.boxSizing = 'border-box';
+    clon.style.setProperty('width', `${ANCHO_PDF_PX}px`, 'important');
+    clon.style.setProperty('max-width', `${ANCHO_PDF_PX}px`, 'important');
+    clon.style.setProperty('min-width', `${ANCHO_PDF_PX}px`, 'important');
+    clon.style.setProperty('margin', '0', 'important');
+    clon.style.setProperty('padding', '10px 12px', 'important');
+    clon.style.setProperty('box-sizing', 'border-box', 'important');
 
     // 3. Eliminar formularios ocultos de otras dependencias y controles .no-print
     clon.querySelectorAll('.formato-oficial.hidden').forEach((f) => f.remove());
@@ -44,10 +46,7 @@ window.PdfBuilder = (() => {
       seccionAnexo.remove();
     }
 
-    // 5. Sincronizar valores vivos desde el DOM original hacia el clon antes de convertir
-    const inputsOrig = wrapper.querySelectorAll('input, textarea');
-    const inputsClon = clon.querySelectorAll('input, textarea');
-    // Nota: como ya eliminamos .formato-oficial.hidden en clon, sincronizamos por atributos/orden en el form activo
+    // 5. Sincronizar valores vivos desde el formulario activo original hacia el clon
     const formOrigActivo = wrapper.querySelector('.formato-oficial.activo');
     const formClonActivo = clon.querySelector('.formato-oficial.activo');
 
@@ -76,7 +75,7 @@ window.PdfBuilder = (() => {
       if (qrObsClon[i]) qrObsClon[i].value = origEl.value;
     });
 
-    // 6. Convertir todos los <input> en texto plano o marcas "X" (eliminando placeholders como "0 / M / P")
+    // 6. Convertir todos los <input> en texto plano o casillas marcadas (sin placeholders)
     clon.querySelectorAll('input').forEach((inp) => {
       if (inp.type === 'hidden') {
         inp.remove();
@@ -125,14 +124,14 @@ window.PdfBuilder = (() => {
         spanVal.style.width = '100%';
         spanVal.style.textAlign = 'center';
         spanVal.style.fontWeight = '700';
-        spanVal.style.fontSize = '11px';
+        spanVal.style.fontSize = '10.5px';
         spanVal.style.minHeight = '14px';
       } else {
         spanVal.style.display = 'block';
         spanVal.style.width = '100%';
         spanVal.style.minHeight = '16px';
         spanVal.style.borderBottom = '1px solid #000000';
-        spanVal.style.fontSize = '11.5px';
+        spanVal.style.fontSize = '11px';
         spanVal.style.padding = '2px 2px 1px';
       }
 
@@ -142,8 +141,8 @@ window.PdfBuilder = (() => {
     // 7. Convertir todos los <textarea> en bloques <div> expandibles
     clon.querySelectorAll('textarea').forEach((ta) => {
       const bloqueTxt = document.createElement('div');
-      bloqueTxt.style.minHeight = '32px';
-      bloqueTxt.style.fontSize = '11px';
+      bloqueTxt.style.minHeight = '30px';
+      bloqueTxt.style.fontSize = '10.5px';
       bloqueTxt.style.lineHeight = '1.35';
       bloqueTxt.style.whiteSpace = 'pre-wrap';
       bloqueTxt.style.wordBreak = 'break-word';
@@ -160,14 +159,14 @@ window.PdfBuilder = (() => {
       if (firmaDataUrl) {
         const imgFirma = document.createElement('img');
         imgFirma.src = firmaDataUrl;
-        imgFirma.style.maxWidth = '320px';
-        imgFirma.style.maxHeight = '95px';
+        imgFirma.style.maxWidth = '310px';
+        imgFirma.style.maxHeight = '90px';
         imgFirma.style.display = 'block';
         imgFirma.style.borderBottom = '1px solid #000000';
         canvasClon.parentNode.replaceChild(imgFirma, canvasClon);
       } else {
         const lineaVacia = document.createElement('div');
-        lineaVacia.style.height = '65px';
+        lineaVacia.style.height = '60px';
         lineaVacia.style.borderBottom = '1px solid #000000';
         canvasClon.parentNode.replaceChild(lineaVacia, canvasClon);
       }
@@ -192,13 +191,13 @@ window.PdfBuilder = (() => {
 
     // 10. Sincronizar el número total de páginas en el encabezado con la altura real medida
     const alturaPx = clon.scrollHeight || 900;
-    const paginasEstimadas = Math.max(1, Math.ceil(alturaPx / 935));
+    const paginasEstimadas = Math.max(1, Math.ceil(alturaPx / 915));
     const spanPag = clon.querySelector('.pag-dinamica');
     if (spanPag) {
       spanPag.textContent = `1 DE ${paginasEstimadas}`;
     }
 
-    return { stage, clon };
+    return { stage, clon, anchoPdfPx: ANCHO_PDF_PX };
   }
 
   /* === SECCIÓN 2: CONSTRUCCIÓN DEL PDF Y NUMERACIÓN DE PÁGINAS === */
@@ -212,7 +211,7 @@ window.PdfBuilder = (() => {
       throw new Error('No se encontró el contenedor del acta para exportar.');
     }
 
-    const { stage, clon } = crearEscenarioClonadoPdf(wrapper, firmaDataUrl);
+    const { stage, clon, anchoPdfPx } = crearEscenarioClonadoPdf(wrapper, firmaDataUrl);
 
     try {
       const opciones = {
@@ -227,8 +226,8 @@ window.PdfBuilder = (() => {
           y: 0,
           scrollX: 0,
           scrollY: 0,
-          width: 750,
-          windowWidth: 794
+          width: anchoPdfPx,
+          windowWidth: anchoPdfPx + 30
         },
         jsPDF: {
           unit: 'mm',
