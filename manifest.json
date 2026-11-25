@@ -1,9 +1,9 @@
 {
-  "id": "./index.html",
+  "id": "./",
   "name": "Actas de Entrega e Inventario GA-R26 | I.E. San Francisco de Sales",
   "short_name": "Actas GA-R26",
   "description": "Sistema PWA de actas de entrega, inventario de dependencias y verificación por código QR - compukelc",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
