@@ -2,18 +2,18 @@
  * ============================================================================
  * SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - CONFIGURACIÓN Y API
  * Institución Educativa San Francisco de Sales | Desarrollado por compukelc
- * Versión: 1.0.0
+ * Versión: 1.0.3
  * ============================================================================
  */
 
 /* === SECCIÓN 1: CONSTANTES GLOBALES E INSTITUCIONALES === */
 const APP_CONFIG = {
-  VERSION: '1.0.0',
+  VERSION: '1.0.3',
   STORAGE_KEY_API_URL: 'ga_r26_backend_exec_url',
+  STORAGE_KEY_API_VER: 'ga_r26_backend_exec_ver',
 
-  // Opcional: puedes pegar aquí directamente tu URL /exec para que venga precargada
-  // en cualquier celular sin tener que escribirla desde el botón "API":
-  DEFAULT_API_URL: '',
+  // URL /exec oficial de tu implementación en Google Apps Script:
+  DEFAULT_API_URL: 'https://script.google.com/macros/s/AKfycbwnhtwo9TbxoHiCl2dbORE73w3MY-gYmOvwNQQ9eWxw29TYIUjpBAWx9MZKKJICtjJigw/exec',
 
   INSTITUCION: {
     NOMBRE: 'INSTITUCIÓN EDUCATIVA SAN FRANCISCO DE SALES',
@@ -30,12 +30,12 @@ const APP_CONFIG = {
     SALON: {
       codigo: 'SALON',
       titulo: 'ENTREGA DE SALÓN',
-      paginasBase: 2
+      paginasBase: 1
     },
     AUDITORIO: {
       codigo: 'AUDITORIO',
       titulo: 'ENTREGA DE AUDITORIO',
-      paginasBase: 2
+      paginasBase: 1
     },
     PRIMERA_INFANCIA: {
       codigo: 'PRIMERA_INFANCIA',
@@ -52,18 +52,20 @@ const APP_CONFIG = {
 
 /* === SECCIÓN 2: GESTOR DE URL /EXEC Y COMUNICACIÓN CON APPS SCRIPT === */
 window.ConfigManager = (() => {
-  /**
-   * Obtiene la URL /exec activa desde localStorage o desde DEFAULT_API_URL
-   */
+  (function sincronizarVersionApi() {
+    const verGuardada = localStorage.getItem(APP_CONFIG.STORAGE_KEY_API_VER);
+    if (verGuardada !== APP_CONFIG.VERSION && APP_CONFIG.DEFAULT_API_URL) {
+      localStorage.setItem(APP_CONFIG.STORAGE_KEY_API_URL, APP_CONFIG.DEFAULT_API_URL);
+      localStorage.setItem(APP_CONFIG.STORAGE_KEY_API_VER, APP_CONFIG.VERSION);
+    }
+  })();
+
   function getApiUrl() {
     const guardada = (localStorage.getItem(APP_CONFIG.STORAGE_KEY_API_URL) || '').trim();
     if (guardada) return guardada;
     return (APP_CONFIG.DEFAULT_API_URL || '').trim();
   }
 
-  /**
-   * Valida y almacena la URL /exec en el navegador
-   */
   function setApiUrl(nuevaUrl) {
     const limpia = String(nuevaUrl || '').trim();
     if (!limpia) {
@@ -73,12 +75,10 @@ window.ConfigManager = (() => {
       throw new Error('La URL debe comenzar con https://script.google.com/');
     }
     localStorage.setItem(APP_CONFIG.STORAGE_KEY_API_URL, limpia);
+    localStorage.setItem(APP_CONFIG.STORAGE_KEY_API_VER, APP_CONFIG.VERSION);
     return limpia;
   }
 
-  /**
-   * Ejecuta una petición GET contra el backend de Google Apps Script
-   */
   async function apiGet(action, params = {}, customBaseUrl = '') {
     const baseUrl = (customBaseUrl || getApiUrl()).trim();
     if (!baseUrl) {
@@ -111,10 +111,6 @@ window.ConfigManager = (() => {
     return data;
   }
 
-  /**
-   * Ejecuta una petición POST enviando text/plain para evitar bloqueos CORS preflight
-   * en Google Apps Script desde GitHub Pages
-   */
   async function apiPost(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl) {
@@ -142,9 +138,6 @@ window.ConfigManager = (() => {
     return data;
   }
 
-  /**
-   * Verifica conectividad activa con ?action=ping
-   */
   async function pingBackend(customUrl = '') {
     return await apiGet('ping', {}, customUrl);
   }
