@@ -10,10 +10,10 @@
   <title>Actas de Entrega e Inventario GA-R26 | I.E. San Francisco de Sales</title>
 
   <!-- === SECCIÓN 0: PWA MANIFEST, ICONOS PNG Y ESTILOS CON CONTROL DE VERSIÓN === -->
-  <link rel="manifest" href="manifest.json?v=1.0.2" />
+  <link rel="manifest" href="manifest.json?v=1.0.4" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="css/styles.css?v=1.0.2" />
+  <link rel="stylesheet" href="css/styles.css?v=1.0.4" />
 
   <!-- Librerías externas para lectura QR en navegador y exportación PDF en cliente -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
@@ -35,7 +35,7 @@
       <button type="button" id="btn-instalar-pwa" class="btn-outline-light hidden" title="Instalar aplicación en este dispositivo">
         &#128242; Instalar App
       </button>
-      <span id="badge-version" class="version-pill">v1.0.2</span>
+      <span id="badge-version" class="version-pill">v1.0.4</span>
       <button type="button" id="btn-config-api" class="btn-outline-light" title="Configurar URL /exec">
         &#9881; API
       </button>
@@ -128,7 +128,6 @@
       <!-- FORMATO 1: ENTREGA DE SALÓN REGULAR (CÓD. GA-R26)                    -->
       <!-- ==================================================================== -->
       <form id="form-SALON" class="formato-oficial activo" data-formato="SALON">
-        <!-- Encabezado Institucional -->
         <table class="tbl-institucional">
           <tr>
             <td class="cell-cod" rowspan="3">CÓD. GA-R26</td>
@@ -151,7 +150,6 @@
           </tr>
         </table>
 
-        <!-- Datos del Titular y Salón -->
         <table class="tbl-datos-generales">
           <tr>
             <td style="width: 58%;">
@@ -175,7 +173,6 @@
           </tr>
         </table>
 
-        <!-- Tabla 1: Equipos y Mobiliario Docente (BUENO / REGULAR / MALO) -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -216,7 +213,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 2: PUPITRES -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -270,7 +266,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 3: SILLAS -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -308,7 +303,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 4: Estado del Piso y Techo -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -334,7 +328,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 5: Elementos con los que dispone el aula de clases -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -360,7 +353,6 @@
           </tbody>
         </table>
 
-        <!-- Cláusula Legal y Observaciones -->
         <div class="clausula-box">
           <p>
             *Se deja constancia de la entrega del salón asignado, junto con el mobiliario y elementos que lo conforman, los cuales quedan a cargo del docente responsable durante el año lectivo. Al finalizar el período académico, el salón deberá ser entregado con los mismos elementos, considerando el desgaste normal por el uso adecuado.
@@ -655,7 +647,6 @@
           </tr>
         </table>
 
-        <!-- Tabla 1: Equipamiento Tecnológico y Mobiliario Docente Aula Híbrida -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -723,7 +714,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 2: PUPITRES Aula Híbrida -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -777,7 +767,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 3: SILLAS Aula Híbrida -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -815,7 +804,6 @@
           </tbody>
         </table>
 
-        <!-- Tabla 4: Piso y Techo Aula Híbrida -->
         <table class="tbl-grid">
           <thead>
             <tr>
@@ -877,7 +865,6 @@
 
       <!-- ==================================================================== -->
       <!-- SECCIÓN 5: ANEXO COMPACTO TIPO FORMULARIO + EVIDENCIA FOTOGRÁFICA QR -->
-      <!-- (SIN MÍNIMOS NI MÁXIMOS: 0 A N BIENES VINCULADOS AL FINAL DEL PDF)    -->
       <!-- ==================================================================== -->
       <section class="anexo-qr-section">
         <div class="anexo-header">
@@ -888,7 +875,6 @@
           <span class="badge-contador">Total QR: <strong id="contador-bienes-qr">0</strong></span>
         </div>
 
-        <!-- Controles de Escaneo / Ingreso Manual (No se imprimen en el PDF) -->
         <div class="qr-controls no-print">
           <button type="button" id="btn-abrir-camara-qr" class="btn-primary">
             &#128247; Escanear Código QR
@@ -909,12 +895,10 @@
           </div>
         </div>
 
-        <!-- Visor de Cámara QR -->
         <div id="qr-reader-box" class="qr-reader-box hidden no-print">
           <div id="qr-reader"></div>
         </div>
 
-        <!-- Lista Dinámica de Fichas Tipo Formulario + Foto (0..N) -->
         <div id="lista-bienes-qr" class="lista-bienes-qr">
           <div id="estado-vacio-qr" class="empty-qr-state no-print">
             No hay bienes con QR vinculados en esta acta. Si la dependencia no tiene equipos etiquetados, puede guardar y generar el PDF directamente.
@@ -1004,16 +988,16 @@
   </footer>
 
   <!-- === SECCIÓN 8: MÓDULOS JAVASCRIPT CON CONTROL DE VERSIÓN === -->
-  <script src="js/config.js?v=1.0.2" defer></script>
-  <script src="js/forms.js?v=1.0.2" defer></script>
-  <script src="js/scanner.js?v=1.0.2" defer></script>
-  <script src="js/pdf-builder.js?v=1.0.2" defer></script>
-  <script src="js/app.js?v=1.0.2" defer></script>
+  <script src="js/config.js?v=1.0.4" defer></script>
+  <script src="js/forms.js?v=1.0.4" defer></script>
+  <script src="js/scanner.js?v=1.0.4" defer></script>
+  <script src="js/pdf-builder.js?v=1.0.4" defer></script>
+  <script src="js/app.js?v=1.0.4" defer></script>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=1.0.2').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.0.4').catch(() => {});
       });
     }
   </script>
