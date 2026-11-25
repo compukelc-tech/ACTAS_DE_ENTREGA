@@ -1,7 +1,7 @@
 /* ============================================================================
    SISTEMA DE ACTAS DE ENTREGA E INVENTARIO (CÓD. GA-R26) - HOJA DE ESTILOS
    Institución Educativa San Francisco de Sales | Desarrollado por compukelc
-   Versión: 1.0.0
+   Versión: 1.0.4
    ============================================================================ */
 
 /* === SECCIÓN 1: VARIABLES GLOBALES Y RESET BASE === */
@@ -531,8 +531,8 @@ button:active {
 .tbl-grid th,
 .tbl-grid td {
   border: 1px solid #000000;
-  padding: 4px 6px;
-  font-size: 11px;
+  padding: 4px 5px;
+  font-size: 10.5px;
   word-wrap: break-word;
 }
 
@@ -551,7 +551,7 @@ button:active {
 }
 
 .th-mini {
-  font-size: 9px !important;
+  font-size: 8.5px !important;
   line-height: 1.15;
   padding: 3px 2px !important;
 }
@@ -601,7 +601,7 @@ button:active {
   background-color: #f8fafc;
   padding: 6px 8px;
   margin-bottom: 8px;
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1.3;
   text-align: justify;
 }
@@ -688,9 +688,10 @@ button:active {
   border-top: 1px solid #000000;
   padding-top: 5px;
   text-align: center;
-  font-size: 9.5px;
+  font-size: 9px;
   color: #1a202c;
   line-height: 1.35;
+  word-break: break-word;
 }
 
 /* === SECCIÓN 7: ANEXO COMPACTO TIPO FORMULARIO + EVIDENCIA FOTOGRÁFICA QR === */
@@ -713,9 +714,9 @@ button:active {
 }
 
 .anexo-header h3 {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
 .anexo-header p {
@@ -1159,11 +1160,11 @@ button:active {
 
 /* === SECCIÓN 10: MODO EXPORTACIÓN PDF (html2pdf.js) E IMPRESIÓN OFICIAL === */
 .sheet-paper.pdf-export-mode {
-  width: 794px !important;
-  max-width: 794px !important;
-  min-width: 794px !important;
+  width: 730px !important;
+  max-width: 730px !important;
+  min-width: 730px !important;
   margin: 0 !important;
-  padding: 14px 18px !important;
+  padding: 10px 12px !important;
   border: none !important;
   box-shadow: none !important;
   overflow: visible !important;
@@ -1171,25 +1172,6 @@ button:active {
 
 .sheet-paper.pdf-export-mode .no-print {
   display: none !important;
-}
-
-.sheet-paper.pdf-export-mode .field-line,
-.sheet-paper.pdf-export-mode .cell-num,
-.sheet-paper.pdf-export-mode .cell-txt,
-.sheet-paper.pdf-export-mode .obs-box textarea,
-.sheet-paper.pdf-export-mode .qr-obs-input {
-  background-color: transparent !important;
-  border-color: transparent !important;
-}
-
-.sheet-paper.pdf-export-mode .field-line {
-  border-bottom: 1px solid #000000 !important;
-  padding: 1px 2px !important;
-}
-
-.sheet-paper.pdf-export-mode #canvas-firma {
-  border: none !important;
-  border-bottom: 1px solid #000000 !important;
 }
 
 .sheet-paper.pdf-export-mode .qr-bien-body {
@@ -1201,7 +1183,6 @@ button:active {
   border-bottom: none !important;
 }
 
-/* Ocultar bloque de anexo QR en PDF si tiene 0 bienes vinculados */
 .sheet-paper.pdf-export-mode .anexo-qr-section.sin-bienes-qr {
   display: none !important;
 }
