@@ -10,10 +10,10 @@
   <title>Actas de Entrega e Inventario GA-R26 | I.E. San Francisco de Sales</title>
 
   <!-- === SECCIÓN 0: PWA MANIFEST, ICONOS PNG Y ESTILOS CON CONTROL DE VERSIÓN === -->
-  <link rel="manifest" href="manifest.json?v=1.0.4" />
+  <link rel="manifest" href="manifest.json?v=1.0.5" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="css/styles.css?v=1.0.4" />
+  <link rel="stylesheet" href="css/styles.css?v=1.0.5" />
 
   <!-- Librerías externas para lectura QR en navegador y exportación PDF en cliente -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
@@ -35,7 +35,7 @@
       <button type="button" id="btn-instalar-pwa" class="btn-outline-light hidden" title="Instalar aplicación en este dispositivo">
         &#128242; Instalar App
       </button>
-      <span id="badge-version" class="version-pill">v1.0.4</span>
+      <span id="badge-version" class="version-pill">v1.0.5</span>
       <button type="button" id="btn-config-api" class="btn-outline-light" title="Configurar URL /exec">
         &#9881; API
       </button>
@@ -988,16 +988,16 @@
   </footer>
 
   <!-- === SECCIÓN 8: MÓDULOS JAVASCRIPT CON CONTROL DE VERSIÓN === -->
-  <script src="js/config.js?v=1.0.4" defer></script>
-  <script src="js/forms.js?v=1.0.4" defer></script>
-  <script src="js/scanner.js?v=1.0.4" defer></script>
-  <script src="js/pdf-builder.js?v=1.0.4" defer></script>
-  <script src="js/app.js?v=1.0.4" defer></script>
+  <script src="js/config.js?v=1.0.5" defer></script>
+  <script src="js/forms.js?v=1.0.5" defer></script>
+  <script src="js/scanner.js?v=1.0.5" defer></script>
+  <script src="js/pdf-builder.js?v=1.0.5" defer></script>
+  <script src="js/app.js?v=1.0.5" defer></script>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=1.0.4').catch(() => {});
+        navigator.serviceWorker.register('sw.js?v=1.0.5').catch(() => {});
       });
     }
   </script>
